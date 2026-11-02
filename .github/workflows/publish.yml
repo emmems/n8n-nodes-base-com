@@ -1,11 +1,16 @@
 name: Publish to npm
 
-# Publishes when a version tag (e.g. v0.2.0) is pushed. The tag must match package.json "version".
+# Run manually (Actions → Publish to npm → Run workflow, or `gh workflow run publish.yml -f otp=123456`).
 # n8n requires verified community nodes to be published from GitHub Actions with npm provenance.
+# The path from start to `npm publish` is kept short so an npm 2FA one-time code is still valid when it arrives;
+# tests and lint run in the separate CI workflow.
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      otp:
+        description: npm one-time 2FA code (leave empty when the token or trusted publishing needs none)
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -14,6 +19,7 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
 
@@ -21,21 +27,13 @@ jobs:
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
-
-      - name: Check tag matches package.json version
-        run: |
-          PKG_VERSION="v$(node -p "require('./package.json').version")"
-          if [ "$PKG_VERSION" != "$GITHUB_REF_NAME" ]; then
-            echo "Tag $GITHUB_REF_NAME does not match package.json version $PKG_VERSION"
-            exit 1
-          fi
+          cache: npm
 
       - run: npm ci
-      - run: npm test
-      - run: npm run lint
-      - run: npx eslint -c .eslintrc.prepublish.js nodes credentials package.json
+      - run: npm run build
 
       - name: Publish
-        run: npm publish --provenance --access public
+        run: npm publish --provenance --access public --ignore-scripts ${OTP:+--otp=$OTP}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          OTP: ${{ inputs.otp }}

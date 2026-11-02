@@ -34,7 +34,8 @@
   },
   "files": [
     "index.js",
-    "dist"
+    "dist",
+    "!dist/**/*.tsbuildinfo"
   ],
   "n8n": {
     "n8nNodesApiVersion": 1,

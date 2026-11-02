@@ -1,7 +1,8 @@
+import {IExecuteFunctions} from "n8n-workflow";
 import {makeBaseRequest} from "../../request.maker";
 
 export async function getProtocolExecution(args: {
-	apiKey: string;
+	context: IExecuteFunctions;
 	input: {
 		"courier_code": string,
 		"package_ids"?: Array<number> | null,
@@ -10,7 +11,7 @@ export async function getProtocolExecution(args: {
 	};
 }) {
 	return await makeBaseRequest({
-		apiKey: args.apiKey,
+		context: args.context,
 		methodName: 'getProtocol',
 		input: args.input
 	});

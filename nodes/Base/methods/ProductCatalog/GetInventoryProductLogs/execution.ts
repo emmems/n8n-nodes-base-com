@@ -1,7 +1,8 @@
+import {IExecuteFunctions} from "n8n-workflow";
 import {makeBaseRequest} from "../../request.maker";
 
 export async function getInventoryProductLogsExecution(args: {
-	apiKey: string;
+	context: IExecuteFunctions;
 	input: {
 		"product_id": number,
 		"date_from"?: number | null,
@@ -12,7 +13,7 @@ export async function getInventoryProductLogsExecution(args: {
 	};
 }) {
 	return await makeBaseRequest({
-		apiKey: args.apiKey,
+		context: args.context,
 		methodName: 'getInventoryProductLogs',
 		input: args.input
 	});

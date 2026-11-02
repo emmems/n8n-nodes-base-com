@@ -1,6 +1,6 @@
-import {IExecuteFunctions} from "n8n-core";
+import {IExecuteFunctions} from "n8n-workflow";
 import {ProductCatalogMethod} from "../types";
-import zod from "zod";
+import validation from "../validation";
 import {addInventoryPriceGroupExecution} from "./AddInventoryPriceGroup/execution";
 import {deleteInventoryPriceGroupExecution} from "./DeleteInventoryPriceGroup/execution";
 import {getInventoryPriceGroupsExecution} from "./GetInventoryPriceGroups/execution";
@@ -25,29 +25,29 @@ import {getInventoryProductsDataExecution} from "./GetInventoryProductsData/exec
 import {getInventoryProductsListExecution} from "./GetInventoryProductsList/execution";
 import {getInventoryProductsStockExecution} from "./GetInventoryProductsStock/execution";
 import {updateInventoryProductsStockExecution} from "./UpdateInventoryProductsStock/execution";
+import {updateInventoryProductsPricesExecution} from "./UpdateInventoryProductsPrices/execution";
 import {getInventoryProductsPricesExecution} from "./GetInventoryProductsPrices/execution";
 import {getInventoryProductLogsExecution} from "./GetInventoryProductLogs/execution";
 import {runProductMacroTriggerExecution} from "./RunProductMacroTrigger/execution";
 
 export async function productCatalogExecution(
 	data: IExecuteFunctions,
-	apiKey: string,
 	operation: string,
 	category: string,
 	i: number,
 ) {
 	if (operation === ProductCatalogMethod.AddInventoryPriceGroup) {
-		const schema = zod.object({
-			price_group_id: zod.union([
-				zod.number(), zod.null()
+		const schema = validation.object({
+			price_group_id: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			name: zod.string(),
-			description: zod.string(),
-			currency: zod.string(),
+			name: validation.string(),
+			description: validation.string(),
+			currency: validation.string(),
 		});
 
 		return await addInventoryPriceGroupExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				price_group_id: data.getNodeParameter('price_group_id', i),
 				name: data.getNodeParameter('name', i),
@@ -58,12 +58,12 @@ export async function productCatalogExecution(
 	}
 
 	if (operation === ProductCatalogMethod.DeleteInventoryPriceGroup) {
-		const schema = zod.object({
-			price_group_id: zod.number(),
+		const schema = validation.object({
+			price_group_id: validation.number(),
 		})
 
 		return await deleteInventoryPriceGroupExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				price_group_id: data.getNodeParameter('price_group_id', i),
 			})
@@ -72,22 +72,22 @@ export async function productCatalogExecution(
 
 	if (operation === ProductCatalogMethod.GetInventoryPriceGroups) {
 		return await getInventoryPriceGroupsExecution({
-			apiKey: apiKey
+			context: data,
 		});
 	}
 
 	if (operation === ProductCatalogMethod.AddInventoryWarehouse) {
-		const schema = zod.object({
-			warehouse_id: zod.union([
-				zod.number(), zod.null()
+		const schema = validation.object({
+			warehouse_id: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			name: zod.string(),
-			description: zod.string(),
-			stock_edition: zod.boolean(),
+			name: validation.string(),
+			description: validation.string(),
+			stock_edition: validation.boolean(),
 		});
 
 		return await addInventoryWarehouseExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				warehouse_id: data.getNodeParameter('warehouse_id', i),
 				name: data.getNodeParameter('name', i),
@@ -98,12 +98,12 @@ export async function productCatalogExecution(
 	}
 
 	if (operation === ProductCatalogMethod.DeleteInventoryWarehouse) {
-		const schema = zod.object({
-			warehouse_id: zod.number(),
+		const schema = validation.object({
+			warehouse_id: validation.number(),
 		})
 
 		return await deleteInventoryWarehouseExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				warehouse_id: data.getNodeParameter('warehouse_id', i),
 			})
@@ -112,40 +112,40 @@ export async function productCatalogExecution(
 
 	if (operation === ProductCatalogMethod.GetInventoryWarehouses) {
 		return await getInventoryWarehousesExecution({
-			apiKey: apiKey
+			context: data,
 		});
 	}
 
 	if (operation === ProductCatalogMethod.AddInventory) {
-		const metadataArraySchema = zod.array(zod.object({
-			value: zod.union([
-				zod.string(), zod.number()
+		const metadataArraySchema = validation.array(validation.object({
+			value: validation.union([
+				validation.string(), validation.number()
 			])
 		}))
 
-		const metadataObjectSchema = zod.object({
+		const metadataObjectSchema = validation.object({
 			metadataValues: metadataArraySchema.optional(),
 		})
 
-		const schema = zod.object({
-			inventory_id: zod.union([
-				zod.number(), zod.null()
+		const schema = validation.object({
+			inventory_id: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			name: zod.string(),
-			description: zod.string(),
-			languages: zod.array(zod.union([
-				zod.string(), zod.number()
+			name: validation.string(),
+			description: validation.string(),
+			languages: validation.array(validation.union([
+				validation.string(), validation.number()
 			])),
-			default_language: zod.string(),
-			price_groups: zod.array(zod.union([
-				zod.string(), zod.number()
+			default_language: validation.string(),
+			price_groups: validation.array(validation.union([
+				validation.string(), validation.number()
 			])),
-			default_price_group: zod.number(),
-			warehouses: zod.array(zod.union([
-				zod.string(), zod.number()
+			default_price_group: validation.number(),
+			warehouses: validation.array(validation.union([
+				validation.string(), validation.number()
 			])),
-			default_warehouse: zod.string(),
-			reservations: zod.boolean(),
+			default_warehouse: validation.string(),
+			reservations: validation.boolean(),
 		})
 
 		const languages = metadataObjectSchema.parse(data.getNodeParameter('languages', i)).metadataValues?.map(el => el.value);
@@ -153,7 +153,7 @@ export async function productCatalogExecution(
 		const warehouses = metadataObjectSchema.parse(data.getNodeParameter('warehouses', i)).metadataValues?.map(el => el.value);
 
 		return await addInventoryExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				inventory_id: data.getNodeParameter('inventory_id', i),
 				name: data.getNodeParameter('name', i),
@@ -170,12 +170,12 @@ export async function productCatalogExecution(
 	}
 
 	if (operation === ProductCatalogMethod.DeleteInventory) {
-		const schema = zod.object({
-			inventory_id: zod.number(),
+		const schema = validation.object({
+			inventory_id: validation.number(),
 		})
 
 		return await deleteInventoryExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				inventory_id: data.getNodeParameter('inventory_id', i),
 			})
@@ -184,24 +184,24 @@ export async function productCatalogExecution(
 
 	if (operation === ProductCatalogMethod.GetInventories) {
 		return await getInventoriesExecution({
-			apiKey: apiKey
+			context: data,
 		});
 	}
 
 	if (operation === ProductCatalogMethod.AddInventoryCategory) {
-		const schema = zod.object({
-			inventory_id: zod.union([
-				zod.number(), zod.null()
+		const schema = validation.object({
+			inventory_id: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			category_id: zod.union([
-				zod.number(), zod.null()
+			category_id: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			name: zod.string(),
-			parent_id: zod.number(),
+			name: validation.string(),
+			parent_id: validation.number(),
 		});
 
 		return await addInventoryCategoryExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				inventory_id: data.getNodeParameter('inventory_id', i),
 				category_id: data.getNodeParameter('category_id', i),
@@ -212,12 +212,12 @@ export async function productCatalogExecution(
 	}
 
 	if (operation === ProductCatalogMethod.DeleteInventoryCategory) {
-		const schema = zod.object({
-			category_id: zod.number(),
+		const schema = validation.object({
+			category_id: validation.number(),
 		})
 
 		return await deleteInventoryCategoryExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				category_id: data.getNodeParameter('category_id', i),
 			})
@@ -225,14 +225,14 @@ export async function productCatalogExecution(
 	}
 
 	if (operation === ProductCatalogMethod.GetInventoryCategories) {
-		const schema = zod.object({
-			inventory_id: zod.union([
-				zod.number(), zod.null()
+		const schema = validation.object({
+			inventory_id: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
 		})
 
 		return await getInventoryCategoriesExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				inventory_id: data.getNodeParameter('inventory_id', i),
 			})
@@ -240,15 +240,15 @@ export async function productCatalogExecution(
 	}
 
 	if (operation === ProductCatalogMethod.AddInventoryManufacturer) {
-		const schema = zod.object({
-			manufacturer_id: zod.union([
-				zod.number(), zod.null()
+		const schema = validation.object({
+			manufacturer_id: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			name: zod.string(),
+			name: validation.string(),
 		});
 
 		return await addInventoryManufacturerExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				manufacturer_id: data.getNodeParameter('manufacturer_id', i),
 				name: data.getNodeParameter('name', i),
@@ -257,12 +257,12 @@ export async function productCatalogExecution(
 	}
 
 	if (operation === ProductCatalogMethod.DeleteInventoryManufacturer) {
-		const schema = zod.object({
-			manufacturer_id: zod.number(),
+		const schema = validation.object({
+			manufacturer_id: validation.number(),
 		})
 
 		return await deleteInventoryManufacturerExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				manufacturer_id: data.getNodeParameter('manufacturer_id', i),
 			})
@@ -271,23 +271,23 @@ export async function productCatalogExecution(
 
 	if (operation === ProductCatalogMethod.GetInventoryManufacturers) {
 		return await getInventoryManufacturersExecution({
-			apiKey: apiKey
+			context: data,
 		});
 	}
 
 	if (operation === ProductCatalogMethod.GetInventoryExtraFields) {
 		return await getInventoryExtraFieldsExecution({
-			apiKey: apiKey
+			context: data,
 		});
 	}
 
 	if (operation === ProductCatalogMethod.GetInventoryIntegrations) {
-		const schema = zod.object({
-			inventory_id: zod.number(),
+		const schema = validation.object({
+			inventory_id: validation.number(),
 		})
 
 		return await getInventoryIntegrationsExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				inventory_id: data.getNodeParameter('inventory_id', i),
 			})
@@ -295,12 +295,12 @@ export async function productCatalogExecution(
 	}
 
 	if (operation === ProductCatalogMethod.GetInventoryAvailableTextFieldKeys) {
-		const schema = zod.object({
-			inventory_id: zod.number(),
+		const schema = validation.object({
+			inventory_id: validation.number(),
 		})
 
 		return await getInventoryAvailableTextFieldKeysExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				inventory_id: data.getNodeParameter('inventory_id', i),
 			})
@@ -308,24 +308,24 @@ export async function productCatalogExecution(
 	}
 
 	if (operation === ProductCatalogMethod.AddInventoryProduct) {
-		const metadataArraySchema = zod.array(zod.object({
-			name: zod.string(),
-			value: zod.union([
-				zod.string(),
-				zod.number(),
+		const metadataArraySchema = validation.array(validation.object({
+			name: validation.string(),
+			value: validation.union([
+				validation.string(),
+				validation.number(),
 			])
 		}))
 
-		const metadataObjectSchema = zod.object({
+		const metadataObjectSchema = validation.object({
 			metadataValues: metadataArraySchema,
 		})
 
-		const metadataArraySchemaForLinks = zod.array(zod.object({
-			name: zod.string(),
-			value: zod.object({
-				metadataValues: zod.object({
-					product_id: zod.number(),
-					variant_id: zod.number()
+		const metadataArraySchemaForLinks = validation.array(validation.object({
+			name: validation.string(),
+			value: validation.object({
+				metadataValues: validation.object({
+					product_id: validation.number(),
+					variant_id: validation.number()
 				}).transform(item => {
 					return {
 						['product_id']: item.product_id,
@@ -335,75 +335,75 @@ export async function productCatalogExecution(
 			})
 		}))
 
-		const metadataObjectSchemaForLinks = zod.object({
+		const metadataObjectSchemaForLinks = validation.object({
 			metadataValues: metadataArraySchemaForLinks,
 		})
 
 
-		const schema = zod.object({
-			inventory_id: zod.string(),
-			product_id: zod.union([
-				zod.string(), zod.null()
+		const schema = validation.object({
+			inventory_id: validation.string(),
+			product_id: validation.union([
+				validation.string(), validation.null()
 			]).optional(),
-			parent_id: zod.union([
-				zod.string(), zod.null()
+			parent_id: validation.union([
+				validation.string(), validation.null()
 			]).optional(),
-			is_bundle: zod.union([
-				zod.boolean(), zod.null()
+			is_bundle: validation.union([
+				validation.boolean(), validation.null()
 			]).optional(),
-			ean: zod.union([
-				zod.string(), zod.null()
+			ean: validation.union([
+				validation.string(), validation.null()
 			]).optional(),
-			sku: zod.union([
-				zod.string(), zod.null()
+			sku: validation.union([
+				validation.string(), validation.null()
 			]).optional(),
-			tax_rate: zod.union([
-				zod.number(), zod.null()
+			tax_rate: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			weight: zod.union([
-				zod.number(), zod.null()
+			weight: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			height: zod.union([
-				zod.number(), zod.null()
+			height: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			width: zod.union([
-				zod.number(), zod.null()
+			width: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			length: zod.union([
-				zod.number(), zod.null()
+			length: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			star: zod.union([
-				zod.number(), zod.null()
+			star: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			manufacturer_id: zod.union([
-				zod.number(), zod.null()
+			manufacturer_id: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			category_id: zod.union([
-				zod.number(), zod.null()
+			category_id: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			prices: zod.union([
-				zod.record(zod.string(), zod.number()), zod.null()
+			prices: validation.union([
+				validation.record(validation.string(), validation.number()), validation.null()
 			]).optional(),
-			stock: zod.union([
-				zod.record(zod.string(), zod.number()), zod.null()
+			stock: validation.union([
+				validation.record(validation.string(), validation.number()), validation.null()
 			]).optional(),
-			locations: zod.union([
-				zod.record(zod.string(), zod.string()), zod.null()
+			locations: validation.union([
+				validation.record(validation.string(), validation.string()), validation.null()
 			]).optional(),
-			text_fields: zod.union([
-				zod.record(zod.string(), zod.union([
-					zod.string(),
-					zod.record(zod.string(), zod.string())
-				])), zod.null()
+			text_fields: validation.union([
+				validation.record(validation.string(), validation.union([
+					validation.string(),
+					validation.record(validation.string(), validation.string())
+				])), validation.null()
 			]).optional(),
-			images: zod.union([
-				zod.record(zod.string(), zod.string()), zod.null()
+			images: validation.union([
+				validation.record(validation.string(), validation.string()), validation.null()
 			]).optional(),
-			links: zod.union([
-				zod.record(zod.string(), zod.record(zod.string(), zod.number())), zod.null()
+			links: validation.union([
+				validation.record(validation.string(), validation.record(validation.string(), validation.number())), validation.null()
 			]).optional(),
-			bundle_products: zod.union([
-				zod.record(zod.string(), zod.string()), zod.null()
+			bundle_products: validation.union([
+				validation.record(validation.string(), validation.string()), validation.null()
 			]).optional()
 		})
 
@@ -507,7 +507,7 @@ export async function productCatalogExecution(
 		}
 
 		return await addInventoryProductExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				inventory_id: data.getNodeParameter('inventory_id', i),
 				product_id: additionalFields.product_id,
@@ -521,7 +521,7 @@ export async function productCatalogExecution(
 				width: additionalFields.width,
 				length: additionalFields.length,
 				star: additionalFields.star,
-				manufacturer_id: additionalFields.manufacture_id,
+				manufacturer_id: additionalFields.manufacturer_id,
 				category_id: additionalFields.category_id,
 				prices: preparedObjectForPrices,
 				stock: preparedObjectForStock,
@@ -535,12 +535,12 @@ export async function productCatalogExecution(
 	}
 
 	if (operation === ProductCatalogMethod.DeleteInventoryProduct) {
-		const schema = zod.object({
-			product_id: zod.number(),
+		const schema = validation.object({
+			product_id: validation.number(),
 		})
 
 		return await deleteInventoryProductExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				product_id: data.getNodeParameter('product_id', i),
 			})
@@ -548,25 +548,25 @@ export async function productCatalogExecution(
 	}
 
 	if (operation === ProductCatalogMethod.GetInventoryProductsData) {
-		const metadataArraySchema = zod.array(zod.object({
-			value: zod.union([
-				zod.string(), zod.number()
+		const metadataArraySchema = validation.array(validation.object({
+			value: validation.union([
+				validation.string(), validation.number()
 			])
 		}))
 
-		const metadataObjectSchema = zod.object({
+		const metadataObjectSchema = validation.object({
 			metadataValues: metadataArraySchema.optional(),
 		})
 
-		const schema = zod.object({
-			inventory_id: zod.number(),
-			products: zod.array(zod.number()),
+		const schema = validation.object({
+			inventory_id: validation.number(),
+			products: validation.array(validation.number()),
 		})
 
 		const products = metadataObjectSchema.parse(data.getNodeParameter('products', i)).metadataValues?.map(el => el.value);
 
 		return await getInventoryProductsDataExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				inventory_id: data.getNodeParameter('inventory_id', i),
 				products,
@@ -575,46 +575,46 @@ export async function productCatalogExecution(
 	}
 
 	if (operation === ProductCatalogMethod.GetInventoryProductsList) {
-		const schema = zod.object({
-			filter_id: zod.union([
-				zod.number(), zod.null()
+		const schema = validation.object({
+			filter_id: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			filter_category_id: zod.union([
-				zod.number(), zod.null()
+			filter_category_id: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			filter_ean: zod.union([
-				zod.string(), zod.null()
+			filter_ean: validation.union([
+				validation.string(), validation.null()
 			]).optional(),
-			filter_sku: zod.union([
-				zod.string(), zod.null()
+			filter_sku: validation.union([
+				validation.string(), validation.null()
 			]).optional(),
-			filter_name: zod.union([
-				zod.string(), zod.null()
+			filter_name: validation.union([
+				validation.string(), validation.null()
 			]).optional(),
-			filter_price_from: zod.union([
-				zod.number(), zod.null()
+			filter_price_from: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			filter_price_to: zod.union([
-				zod.number(), zod.null()
+			filter_price_to: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			filter_stock_from: zod.union([
-				zod.number(), zod.null()
+			filter_stock_from: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			filter_stock_to: zod.union([
-				zod.number(), zod.null()
+			filter_stock_to: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			page: zod.union([
-				zod.number(), zod.null()
+			page: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			filter_sort: zod.union([
-				zod.string(), zod.null()
+			filter_sort: validation.union([
+				validation.string(), validation.null()
 			]).optional(),
 		});
 
 		const additionalFields = data.getNodeParameter("additionalFields", i);
 
 		return await getInventoryProductsListExecution({
-			apiKey: apiKey,
+			context: data,
 			input: {
 				inventory_id: data.getNodeParameter('inventory_id', i) as number,
 				...schema.parse(additionalFields)
@@ -624,16 +624,16 @@ export async function productCatalogExecution(
 	}
 
 	if (operation === ProductCatalogMethod.GetInventoryProductsStock) {
-		const schema = zod.object({
-			page: zod.union([
-				zod.number(), zod.null()
+		const schema = validation.object({
+			page: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
 		});
 
 		const additionalFields = data.getNodeParameter("additionalFields", i);
 
 		return await getInventoryProductsStockExecution({
-			apiKey: apiKey,
+			context: data,
 			input: {
 				inventory_id: data.getNodeParameter('inventory_id', i) as number,
 				...schema.parse(additionalFields)
@@ -642,12 +642,12 @@ export async function productCatalogExecution(
 	}
 
 	if (operation === ProductCatalogMethod.UpdateInventoryProductsStock) {
-		const metadataArraySchemaForProducts = zod.array(zod.object({
-			name: zod.string(),
-			value: zod.object({
-				metadataValues: zod.object({
-					warehouse_id: zod.string(),
-					stock: zod.number()
+		const metadataArraySchemaForProducts = validation.array(validation.object({
+			name: validation.string(),
+			value: validation.object({
+				metadataValues: validation.object({
+					warehouse_id: validation.string(),
+					stock: validation.number()
 				}).transform(item => {
 					return {
 						[item.warehouse_id]: item.stock
@@ -656,15 +656,15 @@ export async function productCatalogExecution(
 			})
 		}))
 
-		const metadataObjectSchemaForProductsStock = zod.object({
+		const metadataObjectSchemaForProductsStock = validation.object({
 			metadataValues: metadataArraySchemaForProducts,
 		})
 
-		const schema = zod.object({
-			inventory_id: zod.string(),
-			products: zod.record(
-				zod.string(),
-				zod.record(zod.string(), zod.number())
+		const schema = validation.object({
+			inventory_id: validation.string(),
+			products: validation.record(
+				validation.string(),
+				validation.record(validation.string(), validation.number())
 			)
 		})
 
@@ -678,7 +678,7 @@ export async function productCatalogExecution(
 		}
 
 		return await updateInventoryProductsStockExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				inventory_id: data.getNodeParameter('inventory_id', i)?.toString(),
 				products: preparedObjectForProducts,
@@ -687,16 +687,16 @@ export async function productCatalogExecution(
 	}
 
 	if (operation === ProductCatalogMethod.GetInventoryProductsPrices) {
-		const schema = zod.object({
-			page: zod.union([
-				zod.number(), zod.null()
+		const schema = validation.object({
+			page: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
 		});
 
 		const additionalFields = data.getNodeParameter("additionalFields", i);
 
 		return await getInventoryProductsPricesExecution({
-			apiKey: apiKey,
+			context: data,
 			input: {
 				inventory_id: data.getNodeParameter('inventory_id', i) as number,
 				...schema.parse(additionalFields)
@@ -705,12 +705,12 @@ export async function productCatalogExecution(
 	}
 
 	if (operation === ProductCatalogMethod.UpdateInventoryProductsPrices) {
-		const metadataArraySchemaForProducts = zod.array(zod.object({
-			name: zod.string(),
-			value: zod.object({
-				metadataValues: zod.object({
-					price_group_id: zod.string(),
-					price: zod.number()
+		const metadataArraySchemaForProducts = validation.array(validation.object({
+			name: validation.string(),
+			value: validation.object({
+				metadataValues: validation.object({
+					price_group_id: validation.string(),
+					price: validation.number()
 				}).transform(item => {
 					return {
 						[item.price_group_id]: item.price
@@ -719,15 +719,15 @@ export async function productCatalogExecution(
 			})
 		}))
 
-		const metadataObjectSchemaForProductsPrices = zod.object({
+		const metadataObjectSchemaForProductsPrices = validation.object({
 			metadataValues: metadataArraySchemaForProducts,
 		})
 
-		const schema = zod.object({
-			inventory_id: zod.string(),
-			products: zod.record(
-				zod.string(),
-				zod.record(zod.string(), zod.number())
+		const schema = validation.object({
+			inventory_id: validation.string(),
+			products: validation.record(
+				validation.string(),
+				validation.record(validation.string(), validation.number())
 			)
 		})
 
@@ -740,8 +740,8 @@ export async function productCatalogExecution(
 			}, {} as Record<string, { [key: string]: number | undefined }>)
 		}
 
-		return await updateInventoryProductsStockExecution({
-			apiKey: apiKey,
+		return await updateInventoryProductsPricesExecution({
+			context: data,
 			input: schema.parse({
 				inventory_id: data.getNodeParameter('inventory_id', i)?.toString(),
 				products: preparedObjectForProducts,
@@ -750,28 +750,28 @@ export async function productCatalogExecution(
 	}
 
 	if (operation === ProductCatalogMethod.GetInventoryProductLogs) {
-		const schema = zod.object({
-			date_from: zod.union([
-				zod.number(), zod.null()
+		const schema = validation.object({
+			date_from: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			date_to: zod.union([
-				zod.number(), zod.null()
+			date_to: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			log_type: zod.union([
-				zod.number(), zod.null()
+			log_type: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			sort: zod.union([
-				zod.number(), zod.null()
+			sort: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
-			page: zod.union([
-				zod.number(), zod.null()
+			page: validation.union([
+				validation.number(), validation.null()
 			]).optional(),
 		});
 
 		const additionalFields = data.getNodeParameter("additionalFields", i);
 
 		return await getInventoryProductLogsExecution({
-			apiKey: apiKey,
+			context: data,
 			input: {
 				product_id: data.getNodeParameter('product_id', i) as number,
 				...schema.parse(additionalFields)
@@ -780,17 +780,18 @@ export async function productCatalogExecution(
 	}
 
 	if (operation === ProductCatalogMethod.RunProductMacroTrigger) {
-		const schema = zod.object({
-			product_id: zod.number(),
-			trigger_id: zod.number(),
+		const schema = validation.object({
+			product_id: validation.number(),
+			trigger_id: validation.number(),
 		})
 
 		return await runProductMacroTriggerExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				product_id: data.getNodeParameter('product_id', i),
-				trigger_id: data.getNodeParameter('product_id', i),
+				trigger_id: data.getNodeParameter('trigger_id', i),
 			})
 		});
 	}
+	return undefined;
 }

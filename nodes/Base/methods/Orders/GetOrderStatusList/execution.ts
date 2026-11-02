@@ -1,10 +1,11 @@
+import {IExecuteFunctions} from "n8n-workflow";
 import {makeBaseRequest} from "../../request.maker";
 
 export async function getOrderStatusListExecution(args: {
-	apiKey: string;
+	context: IExecuteFunctions;
 }) {
 	return await makeBaseRequest({
-		apiKey: args.apiKey,
+		context: args.context,
 		methodName: 'getOrderStatusList',
 	});
 }

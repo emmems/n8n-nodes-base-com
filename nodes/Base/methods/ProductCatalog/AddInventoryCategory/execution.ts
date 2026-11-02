@@ -1,7 +1,8 @@
+import {IExecuteFunctions} from "n8n-workflow";
 import {makeBaseRequest} from "../../request.maker";
 
 export async function addInventoryCategoryExecution(args: {
-	apiKey: string;
+	context: IExecuteFunctions;
 	input: {
 		"inventory_id"?: number | null;
 		"category_id"?: number | null;
@@ -10,7 +11,7 @@ export async function addInventoryCategoryExecution(args: {
 	};
 }) {
 	return await makeBaseRequest({
-		apiKey: args.apiKey,
+		context: args.context,
 		methodName: 'addInventoryCategory',
 		input: args.input
 	});

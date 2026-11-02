@@ -1,7 +1,8 @@
+import {IExecuteFunctions} from "n8n-workflow";
 import {makeBaseRequest} from "../../request.maker";
 
 export async function addOrderProductExecution(args: {
-	apiKey: string;
+	context: IExecuteFunctions;
 	input: {
 		"order_id": number,
 		"storage"?: string | null,
@@ -22,7 +23,7 @@ export async function addOrderProductExecution(args: {
 	};
 }) {
 	return await makeBaseRequest({
-		apiKey: args.apiKey,
+		context: args.context,
 		methodName: 'addOrderProduct',
 		input: args.input
 	});

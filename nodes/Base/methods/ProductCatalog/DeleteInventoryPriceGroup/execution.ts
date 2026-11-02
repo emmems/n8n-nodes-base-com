@@ -1,13 +1,14 @@
+import {IExecuteFunctions} from "n8n-workflow";
 import {makeBaseRequest} from "../../request.maker";
 
 export async function deleteInventoryPriceGroupExecution(args: {
-	apiKey: string;
+	context: IExecuteFunctions;
 	input: {
 		"price_group_id": number,
 	};
 }) {
 	return await makeBaseRequest({
-		apiKey: args.apiKey,
+		context: args.context,
 		methodName: 'deleteInventoryPriceGroup',
 		input: args.input
 	});

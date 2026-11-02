@@ -36,7 +36,9 @@ Each operation maps to the [Base API](https://api.baselinker.com/) method with t
 
 ## Compatibility
 
-Works with n8n 1.x. Needs Node.js 18.10 or newer.
+The package targets the modern execution APIs in `n8n-workflow@3.0.1`, currently a release candidate (RC). The Base rename commit was loaded in n8n 2.45.7; the release-ready changes still need workflow validation in that application. An n8n application 3.x release was not available for validation, so application 3.x compatibility remains unverified. Use the Node.js version required by your n8n installation.
+
+The package has no runtime dependencies. Requests use n8n’s authenticated HTTP helper and the `baseComApi` credential. Base API error responses fail execution, or produce an error item when **Continue On Fail** is enabled.
 
 ## Development
 
@@ -44,6 +46,7 @@ Works with n8n 1.x. Needs Node.js 18.10 or newer.
 npm ci
 npm run build
 npm run lint
+npm test
 ```
 
 To run it in a local n8n (installs into `~/.n8n/custom` and starts n8n):

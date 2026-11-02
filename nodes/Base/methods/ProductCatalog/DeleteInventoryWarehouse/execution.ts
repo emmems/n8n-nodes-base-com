@@ -1,13 +1,14 @@
+import {IExecuteFunctions} from "n8n-workflow";
 import {makeBaseRequest} from "../../request.maker";
 
 export async function deleteInventoryWarehouseExecution(args: {
-	apiKey: string;
+	context: IExecuteFunctions;
 	input: {
 		"warehouse_id": number,
 	};
 }) {
 	return await makeBaseRequest({
-		apiKey: args.apiKey,
+		context: args.context,
 		methodName: 'deleteInventoryWarehouse',
 		input: args.input
 	});

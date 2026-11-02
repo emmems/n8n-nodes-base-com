@@ -1,7 +1,8 @@
+import {IExecuteFunctions} from "n8n-workflow";
 import {makeBaseRequest} from "../../request.maker";
 
 export async function getCourierServicesExecution(args: {
-	apiKey: string;
+	context: IExecuteFunctions;
 	input: {
 		"order_id": number,
 		"courier_code": string,
@@ -11,7 +12,7 @@ export async function getCourierServicesExecution(args: {
 	};
 }) {
 	return await makeBaseRequest({
-		apiKey: args.apiKey,
+		context: args.context,
 		methodName: 'getCourierServices',
 		input: args.input
 	});

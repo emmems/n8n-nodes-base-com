@@ -1,7 +1,8 @@
+import {IExecuteFunctions} from "n8n-workflow";
 import {makeBaseRequest} from "../../request.maker";
 
 export async function getLabelExecution(args: {
-	apiKey: string;
+	context: IExecuteFunctions;
 	input: {
 		"courier_code": string,
 		"package_id"?: number | null,
@@ -9,7 +10,7 @@ export async function getLabelExecution(args: {
 	};
 }) {
 	return await makeBaseRequest({
-		apiKey: args.apiKey,
+		context: args.context,
 		methodName: 'getLabel',
 		input: args.input
 	});

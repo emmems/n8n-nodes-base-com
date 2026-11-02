@@ -1,7 +1,8 @@
+import {IExecuteFunctions} from "n8n-workflow";
 import {makeBaseRequest} from "../../request.maker";
 
 export async function getJournalListExecution(args: {
-	apiKey: string;
+	context: IExecuteFunctions;
 	input: {
 		"last_log_id": number,
 		"logs_types": Array<number>,
@@ -9,7 +10,7 @@ export async function getJournalListExecution(args: {
 	};
 }) {
 	return await makeBaseRequest({
-		apiKey: args.apiKey,
+		context: args.context,
 		methodName: 'getJournalList',
 		input: args.input
 	});

@@ -1,7 +1,8 @@
+import {IExecuteFunctions} from "n8n-workflow";
 import {makeBaseRequest} from "../../request.maker";
 
 export async function getExternalStorageProductsListExecution(args: {
-	apiKey: string;
+	context: IExecuteFunctions;
 	input: {
 		"storage_id": string,
 		"filter_category_id"?: string | null,
@@ -19,7 +20,7 @@ export async function getExternalStorageProductsListExecution(args: {
 	};
 }) {
 	return await makeBaseRequest({
-		apiKey: args.apiKey,
+		context: args.context,
 		methodName: 'getExternalStorageProductsList',
 		input: args.input,
 	});

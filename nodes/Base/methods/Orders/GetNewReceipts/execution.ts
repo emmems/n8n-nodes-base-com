@@ -1,14 +1,15 @@
+import {IExecuteFunctions} from "n8n-workflow";
 import {makeBaseRequest} from "../../request.maker";
 
 export async function getNewReceiptsExecution(args: {
-	apiKey: string;
+	context: IExecuteFunctions;
 	input: {
 		"series_id"?: number | null,
 		"id_from"?: number | null,
 	};
 }) {
 	return await makeBaseRequest({
-		apiKey: args.apiKey,
+		context: args.context,
 		methodName: 'getNewReceipts',
 		input: args.input
 	});

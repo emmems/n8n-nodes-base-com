@@ -1,7 +1,8 @@
+import {IExecuteFunctions} from "n8n-workflow";
 import {makeBaseRequest} from "../../request.maker";
 
 export async function addInventoryWarehouseExecution(args: {
-	apiKey: string;
+	context: IExecuteFunctions;
 	input: {
 		"warehouse_id"?: number | null;
 		"name": string;
@@ -10,7 +11,7 @@ export async function addInventoryWarehouseExecution(args: {
 	};
 }) {
 	return await makeBaseRequest({
-		apiKey: args.apiKey,
+		context: args.context,
 		methodName: 'addInventoryWarehouse',
 		input: args.input
 	});

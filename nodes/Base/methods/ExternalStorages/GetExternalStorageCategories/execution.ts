@@ -1,13 +1,14 @@
+import {IExecuteFunctions} from "n8n-workflow";
 import {makeBaseRequest} from "../../request.maker";
 
 export async function getExternalStorageCategoriesExecution(args: {
-	apiKey: string;
+	context: IExecuteFunctions;
 	input: {
 		"storage_id": string,
 	};
 }) {
 	return await makeBaseRequest({
-		apiKey: args.apiKey,
+		context: args.context,
 		methodName: 'getExternalStorageCategories',
 		input: args.input
 	});

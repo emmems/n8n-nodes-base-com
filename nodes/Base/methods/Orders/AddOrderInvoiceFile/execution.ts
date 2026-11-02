@@ -1,7 +1,8 @@
+import {IExecuteFunctions} from "n8n-workflow";
 import {makeBaseRequest} from "../../request.maker";
 
 export async function addOrderInvoiceFileExecution(args: {
-	apiKey: string;
+	context: IExecuteFunctions;
 	input: {
 		"invoice_id": number,
 		"file": string,
@@ -9,7 +10,7 @@ export async function addOrderInvoiceFileExecution(args: {
 	};
 }) {
 	return await makeBaseRequest({
-		apiKey: args.apiKey,
+		context: args.context,
 		methodName: 'addOrderInvoiceFile',
 		input: args.input
 	});

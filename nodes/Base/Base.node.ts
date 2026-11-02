@@ -1,6 +1,6 @@
-import {IExecuteFunctions,} from 'n8n-core';
+import {IExecuteFunctions,} from 'n8n-workflow';
 
-import {IDataObject, INodeExecutionData, INodeType, INodeTypeDescription,} from 'n8n-workflow';
+import {IDataObject, INodeExecutionData, INodeType, INodeTypeDescription, NodeConnectionTypes,} from 'n8n-workflow';
 
 import {Resource, ProductCatalogMethod} from "./methods/types";
 
@@ -27,8 +27,10 @@ export class Base implements INodeType {
 		defaults: {
 			name: 'Base',
 		},
-		inputs: ['main'],
-		outputs: ['main'],
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-inputs-wrong-regular-node -- enum keeps connection values aligned with n8n-workflow 3.x
+		inputs: [NodeConnectionTypes.Main],
+		// eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong -- enum keeps connection values aligned with n8n-workflow 3.x
+		outputs: [NodeConnectionTypes.Main],
 		credentials: [
 			{
 				name: 'baseComApi',
@@ -81,37 +83,33 @@ export class Base implements INodeType {
 		const resource: Resource = this.getNodeParameter('resource', 0) as Resource;
 		const operation: ProductCatalogMethod = this.getNodeParameter('operation', 0) as ProductCatalogMethod;
 
-		const credentials = await this.getCredentials('baseComApi') as IDataObject;
-		const apiKey = credentials.apiKey as string;
 		let responseData: IDataObject[] = [];
 
+		// Execute the selected API operation for each input item
 		for (let i = 0; i < items.length; i++) {
-			// All operation for Product Catalog resource
-			if (resource === Resource.ProductCatalog) {
-				const result = await productCatalogExecution(this, apiKey, operation, resource, i);
-				responseData.push(result);
-				continue;
+
+			try {
+				let result: IDataObject | undefined;
+				if (resource === Resource.ProductCatalog) {
+					result = await productCatalogExecution(this, operation, resource, i) as IDataObject | undefined;
+				} else if (resource === Resource.ExternalStorages) {
+					result = await externalStoragesExecution(this, operation, resource, i) as IDataObject | undefined;
+				} else if (resource === Resource.Orders) {
+					result = await ordersExecution(this, operation, resource, i) as IDataObject | undefined;
+				} else if (resource === Resource.CourierShipments) {
+					result = await courierShipmentsExecution(this, operation, resource, i) as IDataObject | undefined;
+				}
+				responseData.push(result ?? {});
+			} catch (error) {
+				if (!this.continueOnFail()) throw error;
+				responseData.push({ error: error instanceof Error ? error.message : String(error) });
 			}
-			// All operation for External Storages resource
-			if (resource === Resource.ExternalStorages) {
-				const result = await externalStoragesExecution(this, apiKey, operation, resource, i);
-				responseData.push(result);
-				continue;
-			}
-			// All operation for Orders resource
-			if (resource === Resource.Orders) {
-				const result = await ordersExecution(this, apiKey, operation, resource, i);
-				responseData.push(result);
-				continue;
-			}
-			// All operation for Courier Shipments category
-			if (resource === Resource.CourierShipments) {
-				const result = await courierShipmentsExecution(this, apiKey, operation, resource, i);
-				responseData.push(result);
-			}
+			continue;
+
 		}
 
 		// Map data to n8n data structure
-		return [this.helpers.returnJsonArray(responseData)];
+		const outputItems = this.helpers.returnJsonArray(responseData);
+		return [outputItems.map((outputItem, item) => ({ ...outputItem, pairedItem: { item } }))];
 	}
 }

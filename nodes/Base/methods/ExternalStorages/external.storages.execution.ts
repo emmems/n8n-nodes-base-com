@@ -1,6 +1,6 @@
-import {IExecuteFunctions} from "n8n-core";
+import {IExecuteFunctions} from "n8n-workflow";
 import {ExternalStoragesMethod} from "../types";
-import zod from "zod";
+import validation from "../validation";
 
 import {getExternalStoragesListExecution} from "./GetExternalStoragesList/execution";
 import {getExternalStorageCategoriesExecution} from "./GetExternalStorageCategories/execution";
@@ -12,24 +12,23 @@ import {updateExternalStorageProductsQuantityExecution} from "./UpdateExternalSt
 
 export async function externalStoragesExecution(
 	data: IExecuteFunctions,
-	apiKey: string,
 	operation: string,
 	category: string,
 	i: number,
 ) {
 	if (operation === ExternalStoragesMethod.GetExternalStoragesList) {
 		return await getExternalStoragesListExecution({
-			apiKey: apiKey,
+			context: data,
 		})
 	}
 
 	if (operation === ExternalStoragesMethod.GetExternalStorageCategories) {
-		const schema = zod.object({
-			storage_id: zod.string(),
+		const schema = validation.object({
+			storage_id: validation.string(),
 		});
 
 		return await getExternalStorageCategoriesExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				storage_id: data.getNodeParameter('storage_id', i)?.toString(),
 			})
@@ -37,23 +36,23 @@ export async function externalStoragesExecution(
 	}
 
 	if (operation === ExternalStoragesMethod.GetExternalStorageProductsData) {
-		const schema = zod.object({
-			storage_id: zod.string(),
-			products: zod.array(zod.number()),
+		const schema = validation.object({
+			storage_id: validation.string(),
+			products: validation.array(validation.number()),
 		});
 
-		const metadataArraySchema = zod.array(zod.object({
-			product_id: zod.number()
+		const metadataArraySchema = validation.array(validation.object({
+			product_id: validation.number()
 		}))
 
-		const metadataObjectSchema = zod.object({
+		const metadataObjectSchema = validation.object({
 			metadataValues: metadataArraySchema,
 		})
 
 		const products = metadataObjectSchema.parse(data.getNodeParameter('products', i)).metadataValues?.map(el => el.product_id);
 
 		return await getExternalStorageProductsDataExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				storage_id: data.getNodeParameter('storage_id', i)?.toString(),
 				products
@@ -62,25 +61,25 @@ export async function externalStoragesExecution(
 	}
 
 	if (operation === ExternalStoragesMethod.GetExternalStorageProductsList) {
-		const schema = zod.object({
-			filter_category_id: zod.string().nullish(),
-			filter_sort: zod.string().nullish(),
-			filter_id: zod.string().nullish(),
-			filter_ean: zod.string().nullish(),
-			filter_sku: zod.string().nullish(),
-			filter_name: zod.string().nullish(),
-			filter_price_from: zod.number().nullish(),
-			filter_price_to: zod.number().nullish(),
-			filter_quantity_from: zod.number().nullish(),
-			filter_quantity_to: zod.number().nullish(),
-			filter_available: zod.number().nullish(),
-			page: zod.number().nullish(),
+		const schema = validation.object({
+			filter_category_id: validation.string().nullish(),
+			filter_sort: validation.string().nullish(),
+			filter_id: validation.string().nullish(),
+			filter_ean: validation.string().nullish(),
+			filter_sku: validation.string().nullish(),
+			filter_name: validation.string().nullish(),
+			filter_price_from: validation.number().nullish(),
+			filter_price_to: validation.number().nullish(),
+			filter_quantity_from: validation.number().nullish(),
+			filter_quantity_to: validation.number().nullish(),
+			filter_available: validation.number().nullish(),
+			page: validation.number().nullish(),
 		});
 
 		const additionalFields = data.getNodeParameter('additionalFields', i);
 
 		return await getExternalStorageProductsListExecution({
-			apiKey: apiKey,
+			context: data,
 			input: {
 				storage_id: data.getNodeParameter('storage_id', i)?.toString() as string,
 				...schema.parse(additionalFields)
@@ -89,14 +88,14 @@ export async function externalStoragesExecution(
 	}
 
 	if (operation === ExternalStoragesMethod.GetExternalStorageProductsQuantity) {
-		const schema = zod.object({
-			page: zod.number().nullish(),
+		const schema = validation.object({
+			page: validation.number().nullish(),
 		});
 
 		const additionalFields = data.getNodeParameter('additionalFields', i);
 
 		return await getExternalStorageProductsQuantityExecution({
-			apiKey: apiKey,
+			context: data,
 			input: {
 				storage_id: data.getNodeParameter('storage_id', i)?.toString() as string,
 				...schema.parse(additionalFields)
@@ -105,14 +104,14 @@ export async function externalStoragesExecution(
 	}
 
 	if (operation === ExternalStoragesMethod.GetExternalStorageProductsPrices) {
-		const schema = zod.object({
-			page: zod.number().nullish(),
+		const schema = validation.object({
+			page: validation.number().nullish(),
 		});
 
 		const additionalFields = data.getNodeParameter('additionalFields', i);
 
 		return await getExternalStorageProductsPricesExecution({
-			apiKey: apiKey,
+			context: data,
 			input: {
 				storage_id: data.getNodeParameter('storage_id', i)?.toString() as string,
 				...schema.parse(additionalFields)
@@ -121,24 +120,24 @@ export async function externalStoragesExecution(
 	}
 
 	if (operation === ExternalStoragesMethod.UpdateExternalStorageProductsQuantity) {
-		const schema = zod.object({
-			storage_id: zod.string(),
-			products: zod.array(
-				zod.array(
-					zod.union([
-						zod.string(), zod.number()
+		const schema = validation.object({
+			storage_id: validation.string(),
+			products: validation.array(
+				validation.array(
+					validation.union([
+						validation.string(), validation.number()
 					])
 				)
 			),
 		});
 
-		const metadataArraySchema = zod.array(zod.object({
-			product_id: zod.string(),
-			variant_id: zod.number(),
-			stock_quantity: zod.number()
+		const metadataArraySchema = validation.array(validation.object({
+			product_id: validation.string(),
+			variant_id: validation.number(),
+			stock_quantity: validation.number()
 		}))
 
-		const metadataObjectSchema = zod.object({
+		const metadataObjectSchema = validation.object({
 			metadataValues: metadataArraySchema,
 		})
 
@@ -147,11 +146,12 @@ export async function externalStoragesExecution(
 		});
 
 		return await updateExternalStorageProductsQuantityExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				storage_id: data.getNodeParameter('storage_id', i)?.toString(),
 				products
 			})
 		});
 	}
+	return undefined;
 }

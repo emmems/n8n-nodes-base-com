@@ -1,6 +1,6 @@
-import {IExecuteFunctions} from "n8n-core";
+import {IExecuteFunctions} from "n8n-workflow";
 import {CourierShipmentsMethod} from "../types";
-import zod from "zod";
+import validation from "../validation";
 
 import {createPackageExecution} from "./CreatePackage/execution";
 import {createPackageManualExecution} from "./CreatePackageManual/execution";
@@ -18,36 +18,35 @@ import {getRequestParcelPickupFieldsExecution} from "./GetRequestParcelPickupFie
 
 export async function courierShipmentsExecution(
 	data: IExecuteFunctions,
-	apiKey: string,
 	operation: string,
 	category: string,
 	i: number,
 ) {
 	if (operation === CourierShipmentsMethod.CreatePackage) {
-		const schema = zod.object({
-			order_id: zod.number(),
-			courier_code: zod.string(),
-			packages: zod.array(
-				zod.record(zod.string(), zod.number())
+		const schema = validation.object({
+			order_id: validation.number(),
+			courier_code: validation.string(),
+			packages: validation.array(
+				validation.record(validation.string(), validation.number())
 			),
 		});
 
-		const schemaAdditionalFields = zod.object({
-			account_id: zod.number().nullish(),
-			fields: zod.array(
-				zod.object({
-					id: zod.string(),
-					value: zod.string()
+		const schemaAdditionalFields = validation.object({
+			account_id: validation.number().nullish(),
+			fields: validation.array(
+				validation.object({
+					id: validation.string(),
+					value: validation.string()
 				})
 			).nullish()
 		})
 
-		const metadataArraySchemaForFields = zod.array(zod.object({
-			id: zod.string(),
-			value: zod.string(),
+		const metadataArraySchemaForFields = validation.array(validation.object({
+			id: validation.string(),
+			value: validation.string(),
 		}))
 
-		const metadataObjectSchemaForFields = zod.object({
+		const metadataObjectSchemaForFields = validation.object({
 			metadataValues: metadataArraySchemaForFields,
 		})
 
@@ -65,16 +64,16 @@ export async function courierShipmentsExecution(
 			);
 		}
 
-		const metadataArraySchemaForPackages = zod.array(zod.object({
-			value: zod.object({
-				metadataValues: zod.array(zod.object({
-					id: zod.string(),
-					value: zod.number()
+		const metadataArraySchemaForPackages = validation.array(validation.object({
+			value: validation.object({
+				metadataValues: validation.array(validation.object({
+					id: validation.string(),
+					value: validation.number()
 				}))
 			})
 		}))
 
-		const metadataObjectSchemaForPackages = zod.object({
+		const metadataObjectSchemaForPackages = validation.object({
 			metadataValues: metadataArraySchemaForPackages,
 		})
 
@@ -95,7 +94,7 @@ export async function courierShipmentsExecution(
 		}
 
 		return await createPackageExecution({
-			apiKey: apiKey,
+			context: data,
 			input: {
 				...schema.parse({
 					order_id: data.getNodeParameter('order_id', i),
@@ -111,21 +110,21 @@ export async function courierShipmentsExecution(
 	}
 
 	if (operation === CourierShipmentsMethod.CreatePackageManual) {
-		const schema = zod.object({
-			order_id: zod.number(),
-			courier_code: zod.string(),
-			package_number: zod.string(),
-			pickup_date: zod.number(),
+		const schema = validation.object({
+			order_id: validation.number(),
+			courier_code: validation.string(),
+			package_number: validation.string(),
+			pickup_date: validation.number(),
 		});
 
-		const schemaAdditionalFields = zod.object({
-			return_shipment: zod.boolean().nullish(),
+		const schemaAdditionalFields = validation.object({
+			return_shipment: validation.boolean().nullish(),
 		})
 
 		const additionalFields = data.getNodeParameter('additionalFields', i);
 
 		return await createPackageManualExecution({
-			apiKey: apiKey,
+			context: data,
 			input: {
 				...schema.parse({
 					order_id: data.getNodeParameter('order_id', i),
@@ -142,17 +141,17 @@ export async function courierShipmentsExecution(
 
 	if (operation === CourierShipmentsMethod.GetCouriersList) {
 		return await getCouriersListExecution({
-			apiKey: apiKey,
+			context: data,
 		});
 	}
 
 	if (operation === CourierShipmentsMethod.GetCourierFields) {
-		const schema = zod.object({
-			courier_code: zod.string(),
+		const schema = validation.object({
+			courier_code: validation.string(),
 		});
 
 		return await getCourierFieldsExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 					courier_code: data.getNodeParameter('courier_code', i),
 				}),
@@ -160,37 +159,36 @@ export async function courierShipmentsExecution(
 	}
 
 	if (operation === CourierShipmentsMethod.GetCourierServices) {
-		const schema = zod.object({
-			order_id: zod.number(),
-			courier_code: zod.string(),
+		const schema = validation.object({
+			order_id: validation.number(),
+			courier_code: validation.string(),
 		});
 
-		const schemaAdditionalFields = zod.object({
-			account_id: zod.number().nullish(),
-			fields: zod.array(
-				zod.object({
-					id: zod.string(),
-					value: zod.string()
+		const schemaAdditionalFields = validation.object({
+			account_id: validation.number().nullish(),
+			fields: validation.array(
+				validation.object({
+					id: validation.string(),
+					value: validation.string()
 				})
 			).nullish(),
-			packages: zod.array(
-				zod.record(zod.string(), zod.number())
+			packages: validation.array(
+				validation.record(validation.string(), validation.number())
 			).nullish()
 		})
 
-		const metadataArraySchemaForFields = zod.array(zod.object({
-			id: zod.string(),
-			value: zod.string(),
+		const metadataArraySchemaForFields = validation.array(validation.object({
+			id: validation.string(),
+			value: validation.string(),
 		}))
 
-		const metadataObjectSchemaForFields = zod.object({
+		const metadataObjectSchemaForFields = validation.object({
 			metadataValues: metadataArraySchemaForFields,
 		})
 
 		const additionalFields = data.getNodeParameter('additionalFields', i);
 
 		let preparedArrayForFields = undefined;
-		console.log(JSON.stringify(additionalFields.fields))
 		if (additionalFields.fields !== undefined) {
 			preparedArrayForFields = metadataObjectSchemaForFields.parse(additionalFields.fields).
 			metadataValues?.map(el => {
@@ -202,21 +200,20 @@ export async function courierShipmentsExecution(
 			);
 		}
 
-		const metadataArraySchemaForPackages = zod.array(zod.object({
-			value: zod.object({
-				metadataValues: zod.array(zod.object({
-					id: zod.string(),
-					value: zod.number()
+		const metadataArraySchemaForPackages = validation.array(validation.object({
+			value: validation.object({
+				metadataValues: validation.array(validation.object({
+					id: validation.string(),
+					value: validation.number()
 				}))
 			})
 		}))
 
-		const metadataObjectSchemaForPackages = zod.object({
+		const metadataObjectSchemaForPackages = validation.object({
 			metadataValues: metadataArraySchemaForPackages,
 		})
 
 		let preparedArrayForPackages = undefined;
-		console.log(JSON.stringify(additionalFields.fields))
 		if (additionalFields.packages !== undefined) {
 			if (Object.getOwnPropertyNames(additionalFields.packages).length > 0) {
 				preparedArrayForPackages = metadataObjectSchemaForPackages.parse(additionalFields.packages).metadataValues.
@@ -235,7 +232,7 @@ export async function courierShipmentsExecution(
 		}
 
 		return await getCourierServicesExecution({
-			apiKey: apiKey,
+			context: data,
 			input: {
 				...schema.parse({
 					order_id: data.getNodeParameter('order_id', i),
@@ -251,12 +248,12 @@ export async function courierShipmentsExecution(
 	}
 
 	if (operation === CourierShipmentsMethod.GetCourierAccounts) {
-		const schema = zod.object({
-			courier_code: zod.string(),
+		const schema = validation.object({
+			courier_code: validation.string(),
 		});
 
 		return await getCourierAccountsExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				courier_code: data.getNodeParameter('courier_code', i),
 			}),
@@ -264,10 +261,10 @@ export async function courierShipmentsExecution(
 	}
 
 	if (operation === CourierShipmentsMethod.GetLabel) {
-		const schema = zod.object({
-			courier_code: zod.string(),
-			package_id: zod.number().nullish(),
-			package_number: zod.string().nullish(),
+		const schema = validation.object({
+			courier_code: validation.string(),
+			package_id: validation.number().nullish(),
+			package_number: validation.string().nullish(),
 		});
 
 		const package_id = data.getNodeParameter('package_id', i);
@@ -275,7 +272,7 @@ export async function courierShipmentsExecution(
 
 		if (package_id !== null || package_number !== "") {
 			return await getLabelExecution({
-				apiKey: apiKey,
+			context: data,
 				input: schema.parse({
 					courier_code: data.getNodeParameter('courier_code', i),
 					package_id: data.getNodeParameter('package_id', i),
@@ -288,19 +285,19 @@ export async function courierShipmentsExecution(
 	}
 
 	if (operation === CourierShipmentsMethod.GetProtocol) {
-		const schema = zod.object({
-			courier_code: zod.string(),
-			package_ids: zod.array(zod.number()).nullish(),
-			package_numbers: zod.array(zod.string()).nullish(),
-			account_id: zod.number()
+		const schema = validation.object({
+			courier_code: validation.string(),
+			package_ids: validation.array(validation.number()).nullish(),
+			package_numbers: validation.array(validation.string()).nullish(),
+			account_id: validation.number()
 		});
 
-		const metadataArraySchema = zod.array(zod.object({
-			package_id: zod.number().optional(),
-			package_number: zod.string().optional(),
+		const metadataArraySchema = validation.array(validation.object({
+			package_id: validation.number().optional(),
+			package_number: validation.string().optional(),
 		}))
 
-		const metadataObjectSchema = zod.object({
+		const metadataObjectSchema = validation.object({
 			metadataValues: metadataArraySchema,
 		})
 
@@ -318,7 +315,7 @@ export async function courierShipmentsExecution(
 
 		if (preparedArrayForPackageIDs !== undefined || preparedArrayForPackageNumbers !== undefined) {
 			return await getProtocolExecution({
-				apiKey: apiKey,
+			context: data,
 				input: schema.parse({
 					courier_code: data.getNodeParameter('courier_code', i),
 					package_ids: preparedArrayForPackageIDs,
@@ -332,12 +329,12 @@ export async function courierShipmentsExecution(
 	}
 
 	if (operation === CourierShipmentsMethod.GetOrderPackages) {
-		const schema = zod.object({
-			order_id: zod.number(),
+		const schema = validation.object({
+			order_id: validation.number(),
 		});
 
 		return await getOrderPackagesExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				order_id: data.getNodeParameter('order_id', i),
 			}),
@@ -345,15 +342,15 @@ export async function courierShipmentsExecution(
 	}
 
 	if (operation === CourierShipmentsMethod.GetCourierPackagesStatusHistory) {
-		const schema = zod.object({
-			package_ids: zod.array(zod.number()),
+		const schema = validation.object({
+			package_ids: validation.array(validation.number()),
 		});
 
-		const metadataArraySchema = zod.array(zod.object({
-			package_id: zod.number().optional(),
+		const metadataArraySchema = validation.array(validation.object({
+			package_id: validation.number().optional(),
 		}))
 
-		const metadataObjectSchema = zod.object({
+		const metadataObjectSchema = validation.object({
 			metadataValues: metadataArraySchema,
 		})
 
@@ -368,7 +365,7 @@ export async function courierShipmentsExecution(
 		}
 
 		return await getCourierPackagesStatusHistoryExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				package_ids: preparedArrayForPackageIDs,
 			})
@@ -376,14 +373,14 @@ export async function courierShipmentsExecution(
 	}
 
 	if (operation === CourierShipmentsMethod.DeleteCourierPackage) {
-		const schema = zod.object({
-			courier_code: zod.string(),
-			package_id: zod.number().nullish(),
-			package_number: zod.string().nullish()
+		const schema = validation.object({
+			courier_code: validation.string(),
+			package_id: validation.number().nullish(),
+			package_number: validation.string().nullish()
 		});
 
-		const schemaAdditionalFields = zod.object({
-			force_delete: zod.boolean().nullish(),
+		const schemaAdditionalFields = validation.object({
+			force_delete: validation.boolean().nullish(),
 		})
 
 		const additionalFields = data.getNodeParameter('additionalFields', i);
@@ -393,7 +390,7 @@ export async function courierShipmentsExecution(
 
 		if (package_id !== null || package_number !== "") {
 			return await deleteCourierPackageExecution({
-				apiKey: apiKey,
+			context: data,
 				input: {
 					...schema.parse({
 						courier_code: data.getNodeParameter('courier_code', i),
@@ -411,28 +408,28 @@ export async function courierShipmentsExecution(
 	}
 
 	if (operation === CourierShipmentsMethod.RequestParcelPickup) {
-		const schema = zod.object({
-			courier_code: zod.string(),
-			package_ids: zod.array(zod.number()).nullish(),
-			package_numbers: zod.array(zod.string()).nullish(),
-			account_id: zod.number()
+		const schema = validation.object({
+			courier_code: validation.string(),
+			package_ids: validation.array(validation.number()).nullish(),
+			package_numbers: validation.array(validation.string()).nullish(),
+			account_id: validation.number()
 		});
 
-		const schemaAdditionalFields = zod.object({
-			fields: zod.array(
-				zod.object({
-					id: zod.string(),
-					value: zod.string()
+		const schemaAdditionalFields = validation.object({
+			fields: validation.array(
+				validation.object({
+					id: validation.string(),
+					value: validation.string()
 				})
 			).nullish()
 		})
 
-		const metadataArraySchema = zod.array(zod.object({
-			package_id: zod.number().optional(),
-			package_number: zod.string().optional(),
+		const metadataArraySchema = validation.array(validation.object({
+			package_id: validation.number().optional(),
+			package_number: validation.string().optional(),
 		}))
 
-		const metadataObjectSchema = zod.object({
+		const metadataObjectSchema = validation.object({
 			metadataValues: metadataArraySchema,
 		})
 
@@ -448,12 +445,12 @@ export async function courierShipmentsExecution(
 			metadataValues.map(el => el.package_number);
 		}
 
-		const metadataArraySchemaForFields = zod.array(zod.object({
-			id: zod.string(),
-			value: zod.string(),
+		const metadataArraySchemaForFields = validation.array(validation.object({
+			id: validation.string(),
+			value: validation.string(),
 		}))
 
-		const metadataObjectSchemaForFields = zod.object({
+		const metadataObjectSchemaForFields = validation.object({
 			metadataValues: metadataArraySchemaForFields,
 		})
 
@@ -473,7 +470,7 @@ export async function courierShipmentsExecution(
 
 		if (preparedArrayForPackageIDs !== undefined || preparedArrayForPackageNumbers !== undefined) {
 			return await requestParcelPickupExecution({
-				apiKey: apiKey,
+			context: data,
 				input: {
 					...schema.parse({
 						courier_code: data.getNodeParameter('courier_code', i),
@@ -492,15 +489,16 @@ export async function courierShipmentsExecution(
 	}
 
 	if (operation === CourierShipmentsMethod.GetRequestParcelPickupFields) {
-		const schema = zod.object({
-			courier_code: zod.string(),
+		const schema = validation.object({
+			courier_code: validation.string(),
 		});
 
 		return await getRequestParcelPickupFieldsExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				courier_code: data.getNodeParameter('courier_code', i),
 			}),
 		});
 	}
+	return undefined;
 }

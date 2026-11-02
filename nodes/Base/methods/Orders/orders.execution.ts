@@ -1,6 +1,6 @@
-import {IExecuteFunctions} from "n8n-core";
+import {IExecuteFunctions} from "n8n-workflow";
 import {OrdersMethod} from "../types";
-import zod from "zod";
+import validation from "../validation";
 
 import {getJournalListExecution} from "./GetJournalList/execution";
 import {addOrderExecution} from "./AddOrder/execution";
@@ -32,32 +32,31 @@ import {runOrderMacroTriggerExecution} from "./RunOrderMacroTrigger/execution";
 
 export async function ordersExecution(
 	data: IExecuteFunctions,
-	apiKey: string,
 	operation: string,
 	category: string,
 	i: number,
 ) {
 	if (operation === OrdersMethod.GetJournalList) {
-		const schema = zod.object({
-			last_log_id: zod.number(),
-			logs_types: zod.array(
-				zod.number()
+		const schema = validation.object({
+			last_log_id: validation.number(),
+			logs_types: validation.array(
+				validation.number()
 			),
-			order_id: zod.number().nullish()
+			order_id: validation.number().nullish()
 		});
 
-		const metadataArraySchema = zod.array(zod.object({
-			event_id: zod.number(),
+		const metadataArraySchema = validation.array(validation.object({
+			event_id: validation.number(),
 		}))
 
-		const metadataObjectSchema = zod.object({
+		const metadataObjectSchema = validation.object({
 			metadataValues: metadataArraySchema,
 		})
 
 		const logs_types = metadataObjectSchema.parse(data.getNodeParameter('logs_types', i)).metadataValues?.map(el => el.event_id);
 
 		return await getJournalListExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				last_log_id: data.getNodeParameter('last_log_id', i),
 				logs_types,
@@ -67,78 +66,78 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.AddOrder) {
-		const schema = zod.object({
-			currency: zod.string(),
-			email: zod.string().email({message: "🚨 Invalid email address!"}),
-			products: zod.array(
-				zod.record(zod.string(), zod.union([
-					zod.string(), zod.number()
+		const schema = validation.object({
+			currency: validation.string(),
+			email: validation.string().email({message: "🚨 Invalid email address!"}),
+			products: validation.array(
+				validation.record(validation.string(), validation.union([
+					validation.string(), validation.number()
 				]))
 			),
 		});
 
-		const schemaAdditionalFields = zod.object({
-			order_status_id: zod.number().nullish(),
-			custom_source_id: zod.number().nullish(),
-			payment_method: zod.string().nullish(),
-			payment_method_cod: zod.boolean().nullish(),
-			paid: zod.boolean().nullish(),
-			user_comments: zod.string().nullish(),
-			admin_comments: zod.string().nullish(),
-			phone: zod.string().nullish(),
-			user_login: zod.string().nullish(),
-			delivery_method: zod.string().nullish(),
-			delivery_price: zod.number().nullish(),
-			delivery_fullname: zod.string().nullish(),
-			delivery_company: zod.string().nullish(),
-			delivery_address: zod.string().nullish(),
-			delivery_postcode: zod.string().nullish(),
-			delivery_city: zod.string().nullish(),
-			delivery_state: zod.string().nullish(),
-			delivery_country_code: zod.string().nullish(),
-			delivery_point_id: zod.string().nullish(),
-			delivery_point_name: zod.string().nullish(),
-			delivery_point_address: zod.string().nullish(),
-			delivery_point_postcode: zod.string().nullish(),
-			delivery_point_city: zod.string().nullish(),
-			invoice_fullname: zod.string().nullish(),
-			invoice_company: zod.string().nullish(),
-			invoice_nip: zod.string().nullish(),
-			invoice_address: zod.string().nullish(),
-			invoice_postcode: zod.string().nullish(),
-			invoice_city: zod.string().nullish(),
-			invoice_state: zod.string().nullish(),
-			invoice_country_code: zod.string().nullish(),
-			want_invoice: zod.boolean().nullish(),
-			extra_field_1: zod.string().nullish(),
-			extra_field_2: zod.string().nullish(),
-			custom_extra_fields: zod.record(
-				zod.string(), zod.union([
-					zod.string(),
-					zod.record(zod.string(), zod.string())
+		const schemaAdditionalFields = validation.object({
+			order_status_id: validation.number().nullish(),
+			custom_source_id: validation.number().nullish(),
+			payment_method: validation.string().nullish(),
+			payment_method_cod: validation.boolean().nullish(),
+			paid: validation.boolean().nullish(),
+			user_comments: validation.string().nullish(),
+			admin_comments: validation.string().nullish(),
+			phone: validation.string().nullish(),
+			user_login: validation.string().nullish(),
+			delivery_method: validation.string().nullish(),
+			delivery_price: validation.number().nullish(),
+			delivery_fullname: validation.string().nullish(),
+			delivery_company: validation.string().nullish(),
+			delivery_address: validation.string().nullish(),
+			delivery_postcode: validation.string().nullish(),
+			delivery_city: validation.string().nullish(),
+			delivery_state: validation.string().nullish(),
+			delivery_country_code: validation.string().nullish(),
+			delivery_point_id: validation.string().nullish(),
+			delivery_point_name: validation.string().nullish(),
+			delivery_point_address: validation.string().nullish(),
+			delivery_point_postcode: validation.string().nullish(),
+			delivery_point_city: validation.string().nullish(),
+			invoice_fullname: validation.string().nullish(),
+			invoice_company: validation.string().nullish(),
+			invoice_nip: validation.string().nullish(),
+			invoice_address: validation.string().nullish(),
+			invoice_postcode: validation.string().nullish(),
+			invoice_city: validation.string().nullish(),
+			invoice_state: validation.string().nullish(),
+			invoice_country_code: validation.string().nullish(),
+			want_invoice: validation.boolean().nullish(),
+			extra_field_1: validation.string().nullish(),
+			extra_field_2: validation.string().nullish(),
+			custom_extra_fields: validation.record(
+				validation.string(), validation.union([
+					validation.string(),
+					validation.record(validation.string(), validation.string())
 				])
 			).nullish()
 		})
 
-		const metadataArraySchemaOfProducts = zod.array(zod.object({
-			storage: zod.string().nullish(),
-			storage_id: zod.number().nullish(),
-			product_id: zod.string(),
-			variant_id: zod.number().nullish(),
-			name: zod.string(),
-			sku: zod.string().nullish(),
-			ean: zod.string().nullish(),
-			location: zod.string().nullish(),
-			warehouse_id: zod.number().nullish(),
-			attributes: zod.string().nullish(),
-			price_brutto: zod.number().nonnegative(),
-			tax_rate: zod.number().nonnegative(),
-			quantity: zod.number().gt(0, {message: '🚨 Quantity is to small!'}),
-			weight: zod.number().nullish(),
+		const metadataArraySchemaOfProducts = validation.array(validation.object({
+			storage: validation.string().nullish(),
+			storage_id: validation.number().nullish(),
+			product_id: validation.string(),
+			variant_id: validation.number().nullish(),
+			name: validation.string(),
+			sku: validation.string().nullish(),
+			ean: validation.string().nullish(),
+			location: validation.string().nullish(),
+			warehouse_id: validation.number().nullish(),
+			attributes: validation.string().nullish(),
+			price_brutto: validation.number().nonnegative(),
+			tax_rate: validation.number().nonnegative(),
+			quantity: validation.number().gt(0, {message: '🚨 Quantity is to small!'}),
+			weight: validation.number().nullish(),
 		}))
 
 
-		const metadataObjectSchemaOfProducts = zod.object({
+		const metadataObjectSchemaOfProducts = validation.object({
 			metadataValues: metadataArraySchemaOfProducts,
 		})
 
@@ -166,21 +165,20 @@ export async function ordersExecution(
 				}
 			}
 		);
-		console.log(JSON.stringify(products))
 
 
 		const additionalFields = data.getNodeParameter('additionalFields', i);
 		let preparedObjectForCustomExtraFields = undefined;
 
 
-		const metadataArraySchemaForCustomExtraFields = zod.array(zod.object({
-				extra_field_id: zod.string(),
-				extra_field_name: zod.string().nullish(),
-				extra_field_value: zod.string(),
+		const metadataArraySchemaForCustomExtraFields = validation.array(validation.object({
+				extra_field_id: validation.string(),
+				extra_field_name: validation.string().nullish(),
+				extra_field_value: validation.string(),
 			})
 		)
 
-		const metadataObjectSchemaForCustomExtraFields = zod.object({
+		const metadataObjectSchemaForCustomExtraFields = validation.object({
 			metadataValues: metadataArraySchemaForCustomExtraFields,
 		})
 
@@ -197,10 +195,9 @@ export async function ordersExecution(
 				return prev;
 			}, {} as Record<string, string | { [key: string]: string }>)
 		}
-		console.log(JSON.stringify(preparedObjectForCustomExtraFields));
 
 		return await addOrderExecution({
-			apiKey: apiKey,
+			context: data,
 			input: {
 				...schema.parse({
 					currency: data.getNodeParameter('currency', i),
@@ -250,34 +247,34 @@ export async function ordersExecution(
 
 	if (operation === OrdersMethod.GetOrderSources) {
 		return await getOrderSourcesExecution({
-			apiKey: apiKey
+			context: data,
 		});
 	}
 
 	if (operation === OrdersMethod.GetOrderExtraFields) {
 		return await getOrderExtraFieldsExecution({
-			apiKey: apiKey
+			context: data,
 		});
 	}
 
 	if (operation === OrdersMethod.GetOrders) {
-		const schema = zod.object({
-			order_id: zod.number().nullish(),
-			date_confirmed_from: zod.number().nullish(),
-			date_from: zod.number().nullish(),
-			id_from: zod.number().nullish(),
-			get_unconfirmed_orders: zod.boolean().nullish(),
-			include_custom_extra_fields: zod.boolean().nullish(),
-			status_id: zod.number().nullish(),
-			filter_email: zod.string().nullish(),
-			filter_order_source: zod.string().nullish(),
-			filter_order_source_id: zod.number().nullish(),
+		const schema = validation.object({
+			order_id: validation.number().nullish(),
+			date_confirmed_from: validation.number().nullish(),
+			date_from: validation.number().nullish(),
+			id_from: validation.number().nullish(),
+			get_unconfirmed_orders: validation.boolean().nullish(),
+			include_custom_extra_fields: validation.boolean().nullish(),
+			status_id: validation.number().nullish(),
+			filter_email: validation.string().nullish(),
+			filter_order_source: validation.string().nullish(),
+			filter_order_source_id: validation.number().nullish(),
 		});
 
 		const additionalFields = data.getNodeParameter('additionalFields', i);
 
 		return await getOrdersExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				order_id: additionalFields.order_id,
 				date_confirmed_from: additionalFields.date_confirmed_from,
@@ -294,12 +291,12 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.GetOrderTransactionDetails) {
-		const schema = zod.object({
-			order_id: zod.number(),
+		const schema = validation.object({
+			order_id: validation.number(),
 		});
 
 		return await getOrderTransactionDetailsExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				order_id: data.getNodeParameter('order_id', i),
 			})
@@ -307,12 +304,12 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.GetOrdersByEmail) {
-		const schema = zod.object({
-			email: zod.string(),
+		const schema = validation.object({
+			email: validation.string(),
 		});
 
 		return await getOrdersByEmailExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				email: data.getNodeParameter('email', i),
 			})
@@ -320,12 +317,12 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.GetOrdersByPhone) {
-		const schema = zod.object({
-			phone: zod.string(),
+		const schema = validation.object({
+			phone: validation.string(),
 		});
 
 		return await getOrdersByPhoneExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				phone: data.getNodeParameter('phone', i),
 			})
@@ -333,11 +330,11 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.AddInvoice) {
-		const schema = zod.object({
-			order_id: zod.number(),
-			series_id: zod.number(),
-			vat_rate: zod.union([
-				zod.string(), zod.number()
+		const schema = validation.object({
+			order_id: validation.number(),
+			series_id: validation.number(),
+			vat_rate: validation.union([
+				validation.string(), validation.number()
 			]).nullish(),
 		});
 
@@ -366,11 +363,12 @@ export async function ordersExecution(
 					break;
 			}
 
-			if (additionalFields.vat_rate! >= 0 && additionalFields.vat_rate! <= 100) {
-				preparedVatRateValue = additionalFields.vat_rate;
-				if (typeof preparedVatRateValue === "string") {
-					parseFloat(preparedVatRateValue)
-				}
+			const vatRate = additionalFields.vat_rate;
+			const numericVatRate = typeof vatRate === 'string' && vatRate.trim() !== ''
+				? Number(vatRate)
+				: vatRate;
+			if (typeof numericVatRate === 'number' && Number.isFinite(numericVatRate) && numericVatRate >= 0 && numericVatRate <= 100) {
+				preparedVatRateValue = numericVatRate;
 			}
 
 			if (preparedVatRateValue === undefined) {
@@ -380,7 +378,7 @@ export async function ordersExecution(
 
 
 		return await addInvoiceExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				order_id: data.getNodeParameter('order_id', i),
 				series_id: data.getNodeParameter('series_id', i),
@@ -390,19 +388,19 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.GetInvoices) {
-		const schema = zod.object({
-			invoice_id: zod.number().nullish(),
-			order_id: zod.number().nullish(),
-			date_from: zod.number().nullish(),
-			id_from: zod.number().nullish(),
-			series_id: zod.number().nullish(),
-			get_external_invoices: zod.boolean().nullish(),
+		const schema = validation.object({
+			invoice_id: validation.number().nullish(),
+			order_id: validation.number().nullish(),
+			date_from: validation.number().nullish(),
+			id_from: validation.number().nullish(),
+			series_id: validation.number().nullish(),
+			get_external_invoices: validation.boolean().nullish(),
 		});
 
 		const additionalFields = data.getNodeParameter('additionalFields', i);
 
 		return await getInvoicesExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				invoice_id: additionalFields.invoice_id,
 				order_id: additionalFields.order_id,
@@ -416,26 +414,26 @@ export async function ordersExecution(
 
 	if (operation === OrdersMethod.GetSeries) {
 		return await getSeriesExecution({
-			apiKey: apiKey
+			context: data,
 		});
 	}
 
 	if (operation === OrdersMethod.GetOrderStatusList) {
 		return await getOrderStatusListExecution({
-			apiKey: apiKey
+			context: data,
 		});
 	}
 
 	if (operation === OrdersMethod.GetOrderPaymentsHistory) {
-		const schema = zod.object({
-			order_id: zod.number(),
-			show_full_history: zod.boolean().nullish()
+		const schema = validation.object({
+			order_id: validation.number(),
+			show_full_history: validation.boolean().nullish()
 		});
 
 		const additionalFields = data.getNodeParameter('additionalFields', i);
 
 		return await getOrderPaymentsHistoryExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				order_id: data.getNodeParameter('order_id', i),
 				show_full_history: additionalFields.show_full_history,
@@ -444,15 +442,15 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.GetNewReceipts) {
-		const schema = zod.object({
-			series_id: zod.number().nullish(),
-			id_from: zod.number().nullish(),
+		const schema = validation.object({
+			series_id: validation.number().nullish(),
+			id_from: validation.number().nullish(),
 		});
 
 		const additionalFields = data.getNodeParameter('additionalFields', i);
 
 		return await getNewReceiptsExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				series_id: additionalFields.series_id,
 				id_from: additionalFields.id_from,
@@ -461,9 +459,9 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.GetReceipt) {
-		const schema = zod.object({
-			receipt_id: zod.number().nullish(),
-			order_id: zod.number().nullish(),
+		const schema = validation.object({
+			receipt_id: validation.number().nullish(),
+			order_id: validation.number().nullish(),
 		});
 
 		const receipt_id = data.getNodeParameter('receipt_id', i);
@@ -474,7 +472,7 @@ export async function ordersExecution(
 		}
 
 		return await getReceiptExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				receipt_id,
 				order_id,
@@ -483,60 +481,60 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.SetOrderFields) {
-		const schemaAdditionalFields = zod.object({
-			admin_comments: zod.string().nullish(),
-			user_comments: zod.string().nullish(),
-			payment_method: zod.string().nullish(),
-			payment_method_cod: zod.boolean().nullish(),
-			email: zod.string().nullish(),
-			phone: zod.string().nullish(),
-			user_login: zod.string().nullish(),
-			delivery_method: zod.string().nullish(),
-			delivery_price: zod.number().nullish(),
-			delivery_fullname: zod.string().nullish(),
-			delivery_company: zod.string().nullish(),
-			delivery_address: zod.string().nullish(),
-			delivery_postcode: zod.string().nullish(),
-			delivery_city: zod.string().nullish(),
-			delivery_state: zod.string().nullish(),
-			delivery_country_code: zod.string().nullish(),
-			delivery_point_id: zod.string().nullish(),
-			delivery_point_name: zod.string().nullish(),
-			delivery_point_address: zod.string().nullish(),
-			delivery_point_postcode: zod.string().nullish(),
-			delivery_point_city: zod.string().nullish(),
-			invoice_fullname: zod.string().nullish(),
-			invoice_company: zod.string().nullish(),
-			invoice_nip: zod.string().nullish(),
-			invoice_address: zod.string().nullish(),
-			invoice_postcode: zod.string().nullish(),
-			invoice_city: zod.string().nullish(),
-			invoice_state: zod.string().nullish(),
-			invoice_country_code: zod.string().nullish(),
-			want_invoice: zod.boolean().nullish(),
-			extra_field_1: zod.string().nullish(),
-			extra_field_2: zod.string().nullish(),
-			custom_extra_fields: zod.record(
-				zod.string(), zod.union([
-					zod.string(),
-					zod.record(zod.string(), zod.string())
+		const schemaAdditionalFields = validation.object({
+			admin_comments: validation.string().nullish(),
+			user_comments: validation.string().nullish(),
+			payment_method: validation.string().nullish(),
+			payment_method_cod: validation.boolean().nullish(),
+			email: validation.string().nullish(),
+			phone: validation.string().nullish(),
+			user_login: validation.string().nullish(),
+			delivery_method: validation.string().nullish(),
+			delivery_price: validation.number().nullish(),
+			delivery_fullname: validation.string().nullish(),
+			delivery_company: validation.string().nullish(),
+			delivery_address: validation.string().nullish(),
+			delivery_postcode: validation.string().nullish(),
+			delivery_city: validation.string().nullish(),
+			delivery_state: validation.string().nullish(),
+			delivery_country_code: validation.string().nullish(),
+			delivery_point_id: validation.string().nullish(),
+			delivery_point_name: validation.string().nullish(),
+			delivery_point_address: validation.string().nullish(),
+			delivery_point_postcode: validation.string().nullish(),
+			delivery_point_city: validation.string().nullish(),
+			invoice_fullname: validation.string().nullish(),
+			invoice_company: validation.string().nullish(),
+			invoice_nip: validation.string().nullish(),
+			invoice_address: validation.string().nullish(),
+			invoice_postcode: validation.string().nullish(),
+			invoice_city: validation.string().nullish(),
+			invoice_state: validation.string().nullish(),
+			invoice_country_code: validation.string().nullish(),
+			want_invoice: validation.boolean().nullish(),
+			extra_field_1: validation.string().nullish(),
+			extra_field_2: validation.string().nullish(),
+			custom_extra_fields: validation.record(
+				validation.string(), validation.union([
+					validation.string(),
+					validation.record(validation.string(), validation.string())
 				])
 			).nullish(),
-			pick_state: zod.number().nullish(),
-			pack_state: zod.number().nullish(),
+			pick_state: validation.number().nullish(),
+			pack_state: validation.number().nullish(),
 		})
 
 		const additionalFields = data.getNodeParameter('additionalFields', i);
 		let preparedObjectForCustomExtraFields = undefined;
 
-		const metadataArraySchemaForCustomExtraFields = zod.array(zod.object({
-				extra_field_id: zod.string(),
-				extra_field_name: zod.string().nullish(),
-				extra_field_value: zod.string(),
+		const metadataArraySchemaForCustomExtraFields = validation.array(validation.object({
+				extra_field_id: validation.string(),
+				extra_field_name: validation.string().nullish(),
+				extra_field_value: validation.string(),
 			})
 		)
 
-		const metadataObjectSchemaForCustomExtraFields = zod.object({
+		const metadataObjectSchemaForCustomExtraFields = validation.object({
 			metadataValues: metadataArraySchemaForCustomExtraFields,
 		})
 
@@ -553,10 +551,9 @@ export async function ordersExecution(
 				return prev;
 			}, {} as Record<string, string | { [key: string]: string }>)
 		}
-		console.log(JSON.stringify(preparedObjectForCustomExtraFields));
 
 		return await setOrderFieldsExecution({
-			apiKey: apiKey,
+			context: data,
 			input: {
 				order_id: data.getNodeParameter('order_id', i) as number,
 				...schemaAdditionalFields.parse({
@@ -601,33 +598,33 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.AddOrderProduct) {
-		const schema = zod.object({
-			order_id: zod.number(),
-			product_id: zod.string(),
-			price_brutto: zod.number().nonnegative(),
-			tax_rate: zod.number().nonnegative(),
-			quantity: zod.number().gt(0, {message: '🚨 Quantity is to small!'}),
+		const schema = validation.object({
+			order_id: validation.number(),
+			product_id: validation.string(),
+			price_brutto: validation.number().nonnegative(),
+			tax_rate: validation.number().nonnegative(),
+			quantity: validation.number().gt(0, {message: '🚨 Quantity is to small!'}),
 		});
 
-		const schemaAdditionalFields = zod.object({
-			storage: zod.string().nullish(),
-			storage_id: zod.string().nullish(),
-			variant_id: zod.string().nullish(),
-			auction_id: zod.string().nullish(),
-			name: zod.string().nullish(),
-			sku: zod.string().nullish(),
-			ean: zod.string().nullish(),
-			location: zod.string().nullish(),
-			warehouse_id: zod.number().nullish(),
-			attributes: zod.string().nullish(),
-			weight: zod.number().nullish(),
+		const schemaAdditionalFields = validation.object({
+			storage: validation.string().nullish(),
+			storage_id: validation.string().nullish(),
+			variant_id: validation.string().nullish(),
+			auction_id: validation.string().nullish(),
+			name: validation.string().nullish(),
+			sku: validation.string().nullish(),
+			ean: validation.string().nullish(),
+			location: validation.string().nullish(),
+			warehouse_id: validation.number().nullish(),
+			attributes: validation.string().nullish(),
+			weight: validation.number().nullish(),
 		})
 
 		const additionalFields = data.getNodeParameter('additionalFields', i);
 
 
 		return await addOrderProductExecution({
-			apiKey: apiKey,
+			context: data,
 			input: {
 				...schema.parse({
 					order_id: data.getNodeParameter('order_id', i),
@@ -654,33 +651,33 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.SetOrderProductFields) {
-		const schema = zod.object({
-			order_id: zod.number(),
-			order_product_id: zod.number(),
+		const schema = validation.object({
+			order_id: validation.number(),
+			order_product_id: validation.number(),
 		});
 
-		const schemaAdditionalFields = zod.object({
-			storage: zod.string().nullish(),
-			storage_id: zod.string().nullish(),
-			product_id: zod.string().nullish(),
-			variant_id: zod.string().nullish(),
-			auction_id: zod.string().nullish(),
-			name: zod.string().nullish(),
-			sku: zod.string().nullish(),
-			ean: zod.string().nullish(),
-			location: zod.string().nullish(),
-			warehouse_id: zod.number().nullish(),
-			attributes: zod.string().nullish(),
-			price_brutto: zod.number().nonnegative().nullish(),
-			tax_rate: zod.number().nonnegative().nullish(),
-			quantity: zod.number().gt(0, {message: '🚨 Quantity is to small!'}).nullish(),
-			weight: zod.number().nullish(),
+		const schemaAdditionalFields = validation.object({
+			storage: validation.string().nullish(),
+			storage_id: validation.string().nullish(),
+			product_id: validation.string().nullish(),
+			variant_id: validation.string().nullish(),
+			auction_id: validation.string().nullish(),
+			name: validation.string().nullish(),
+			sku: validation.string().nullish(),
+			ean: validation.string().nullish(),
+			location: validation.string().nullish(),
+			warehouse_id: validation.number().nullish(),
+			attributes: validation.string().nullish(),
+			price_brutto: validation.number().nonnegative().nullish(),
+			tax_rate: validation.number().nonnegative().nullish(),
+			quantity: validation.number().gt(0, {message: '🚨 Quantity is to small!'}).nullish(),
+			weight: validation.number().nullish(),
 		})
 
 		const additionalFields = data.getNodeParameter('additionalFields', i);
 
 		return await setOrderProductFieldsExecution({
-			apiKey: apiKey,
+			context: data,
 			input: {
 				...schema.parse({
 					order_id: data.getNodeParameter('order_id', i),
@@ -708,13 +705,13 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.DeleteOrderProduct) {
-		const schema = zod.object({
-			order_id: zod.number(),
-			order_product_id: zod.number(),
+		const schema = validation.object({
+			order_id: validation.number(),
+			order_product_id: validation.number(),
 		});
 
 		return await deleteOrderProductExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				order_id: data.getNodeParameter('order_id', i),
 				order_product_id: data.getNodeParameter('order_product_id', i),
@@ -723,25 +720,25 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.SetOrderPayment) {
-		const schema = zod.object({
-			order_id: zod.number(),
-			payment_done: zod.number(),
-			payment_date: zod.number(),
-			payment_comment: zod.string(),
+		const schema = validation.object({
+			order_id: validation.number(),
+			payment_done: validation.number(),
+			payment_date: validation.number(),
+			payment_comment: validation.string(),
 		});
 
-		const schemaAdditionalFields = zod.object({
-			external_payment_id: zod.string().nullish(),
+		const schemaAdditionalFields = validation.object({
+			external_payment_id: validation.string().nullish(),
 		})
 
 		const additionalFields = data.getNodeParameter('additionalFields', i);
 
 		return await setOrderPaymentExecution({
-			apiKey: apiKey,
+			context: data,
 			input: {
 				...schema.parse({
 					order_id: data.getNodeParameter('order_id', i),
-					order_product_id: data.getNodeParameter('order_product_id', i),
+					payment_done: data.getNodeParameter('payment_done', i),
 					payment_date: data.getNodeParameter('payment_date', i),
 					payment_comment: data.getNodeParameter('payment_comment', i),
 				}),
@@ -753,13 +750,13 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.SetOrderStatus) {
-		const schema = zod.object({
-			order_id: zod.number(),
-			status_id: zod.number(),
+		const schema = validation.object({
+			order_id: validation.number(),
+			status_id: validation.number(),
 		});
 
 		return await setOrderStatusExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				order_id: data.getNodeParameter('order_id', i),
 				status_id: data.getNodeParameter('status_id', i),
@@ -768,16 +765,16 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.SetOrderStatuses) {
-		const schema = zod.object({
-			order_ids: zod.array(zod.number()),
-			status_id: zod.number(),
+		const schema = validation.object({
+			order_ids: validation.array(validation.number()),
+			status_id: validation.number(),
 		});
 
-		const metadataArraySchemaOfOrderIDs = zod.array(zod.object({
-			order_id: zod.number(),
+		const metadataArraySchemaOfOrderIDs = validation.array(validation.object({
+			order_id: validation.number(),
 		}))
 
-		const metadataObjectSchemaOfOrderIds = zod.object({
+		const metadataObjectSchemaOfOrderIds = validation.object({
 			metadataValues: metadataArraySchemaOfOrderIDs,
 		})
 
@@ -785,7 +782,7 @@ export async function ordersExecution(
 			data.getNodeParameter('order_ids', i)).metadataValues?.map(el => el.order_id);
 
 		return await setOrderStatusesExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				order_ids,
 				status_id: data.getNodeParameter('status_id', i),
@@ -794,21 +791,21 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.SetOrderReceipt) {
-		const schema = zod.object({
-			receipt_id: zod.number(),
-			date: zod.number(),
+		const schema = validation.object({
+			receipt_id: validation.number(),
+			date: validation.number(),
 		});
 
-		const schemaAdditionalFields = zod.object({
-			receipt_nr: zod.string().nullish(),
-			printer_error: zod.boolean().nullish(),
-			printer_name: zod.string().nullish(),
+		const schemaAdditionalFields = validation.object({
+			receipt_nr: validation.string().nullish(),
+			printer_error: validation.boolean().nullish(),
+			printer_name: validation.string().nullish(),
 		})
 
 		const additionalFields = data.getNodeParameter('additionalFields', i);
 
 		return await setOrderReceiptExecution({
-			apiKey: apiKey,
+			context: data,
 			input: {
 				...schema.parse({
 					receipt_id: data.getNodeParameter('receipt_id', i),
@@ -824,10 +821,10 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.AddOrderInvoiceFile) {
-		const schema = zod.object({
-			invoice_id: zod.number(),
-			file: zod.string(),
-			external_invoice_number: zod.string(),
+		const schema = validation.object({
+			invoice_id: validation.number(),
+			file: validation.string(),
+			external_invoice_number: validation.string(),
 		});
 
 		let file = data.getNodeParameter('file', i);
@@ -839,7 +836,7 @@ export async function ordersExecution(
 		}
 
 		return await addOrderInvoiceFileExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				invoice_id: data.getNodeParameter('invoice_id', i),
 				file,
@@ -849,10 +846,10 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.AddOrderReceiptFile) {
-		const schema = zod.object({
-			receipt_id: zod.number(),
-			file: zod.string(),
-			external_receipt_number: zod.string(),
+		const schema = validation.object({
+			receipt_id: validation.number(),
+			file: validation.string(),
+			external_receipt_number: validation.string(),
 		});
 
 		let file = data.getNodeParameter('file', i);
@@ -864,7 +861,7 @@ export async function ordersExecution(
 		}
 
 		return await addOrderReceiptFileExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				receipt_id: data.getNodeParameter('receipt_id', i),
 				file,
@@ -874,12 +871,12 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.GetInvoiceFile) {
-		const schema = zod.object({
-			invoice_id: zod.number(),
+		const schema = validation.object({
+			invoice_id: validation.number(),
 		});
 
 		return await getInvoiceFileExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				invoice_id: data.getNodeParameter('invoice_id', i),
 			}),
@@ -887,17 +884,18 @@ export async function ordersExecution(
 	}
 
 	if (operation === OrdersMethod.RunOrderMacroTrigger) {
-		const schema = zod.object({
-			order_id: zod.number(),
-			trigger_id: zod.number(),
+		const schema = validation.object({
+			order_id: validation.number(),
+			trigger_id: validation.number(),
 		});
 
 		return await runOrderMacroTriggerExecution({
-			apiKey: apiKey,
+			context: data,
 			input: schema.parse({
 				order_id: data.getNodeParameter('order_id', i),
 				trigger_id: data.getNodeParameter('trigger_id', i),
 			}),
 		});
 	}
+	return undefined;
 }

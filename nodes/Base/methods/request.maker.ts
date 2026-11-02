@@ -1,33 +1,33 @@
+import { IDataObject, IExecuteFunctions, JsonObject, NodeApiError } from 'n8n-workflow';
+
 export async function makeBaseRequest(args: {
-	apiKey: string;
-
+	context: IExecuteFunctions;
 	methodName: string;
+	input?: Record<string, unknown>;
+}): Promise<IDataObject> {
+	const body = new URLSearchParams();
+	body.set('method', args.methodName);
+	if (args.input != null) body.set('parameters', JSON.stringify(args.input));
 
-	input?: Record<string,
-		string | number | boolean | undefined | null |
-		Array< string | number > |
-		Array<Array<string | number>> |
-		Array<Record<string, string | number>> |
-		{ name: string; value: string | number | { name: string } } |
-		Record<string, string | number | Record<string, string | number>> |
-		Record<string, Record<string, number>>>;
-}) {
+	const response = (await args.context.helpers.httpRequestWithAuthentication.call(
+		args.context,
+		'baseComApi',
+		{
+			url: 'https://api.baselinker.com/connector.php',
+			method: 'POST',
+			body: body.toString(),
+			headers: { 'content-type': 'application/x-www-form-urlencoded' },
+			json: true,
+			returnFullResponse: false,
+		},
+	)) as IDataObject;
 
-	const params = new URLSearchParams()
-	params.set("method", args.methodName);
-	if (args.input != null) {
-		params.set("parameters", JSON.stringify(args.input));
+	if (response.status === 'ERROR') {
+		throw new NodeApiError(args.context.getNode(), response as JsonObject, {
+			message: typeof response.error_message === 'string' ? response.error_message : 'Base API request failed',
+			description: typeof response.error_code === 'string' ? response.error_code : undefined,
+		});
 	}
 
-	const headers = new Headers();
-	headers.set("X-BLToken", args.apiKey);
-	headers.set("content-type", "application/x-www-form-urlencoded");
-
-	let response = await fetch('https://api.baselinker.com/connector.php', {
-		headers: headers,
-		method: 'POST',
-		body: params.toString()
-	});
-
-	return await response.json();
+	return response;
 }

@@ -1,7 +1,8 @@
+import {IExecuteFunctions} from "n8n-workflow";
 import {makeBaseRequest} from "../../request.maker";
 
 export async function setOrderPaymentExecution(args: {
-	apiKey: string;
+	context: IExecuteFunctions;
 	input: {
 		"order_id": number,
 		"payment_done": number,
@@ -11,7 +12,7 @@ export async function setOrderPaymentExecution(args: {
 	};
 }) {
 	return await makeBaseRequest({
-		apiKey: args.apiKey,
+		context: args.context,
 		methodName: 'setOrderPayment',
 		input: args.input
 	});

@@ -1,4 +1,4 @@
-# n8n-nodes-base-com
+# @emems/n8n-nodes-base-com
 
 An [n8n](https://n8n.io/) community node for the [Base](https://base.com/) API (formerly BaseLinker).
 
@@ -9,7 +9,7 @@ An [n8n](https://n8n.io/) community node for the [Base](https://base.com/) API (
 Follow the [community nodes installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n docs. In n8n, go to **Settings → Community Nodes → Install** and enter:
 
 ```
-n8n-nodes-base-com
+@emems/n8n-nodes-base-com
 ```
 
 ## Credentials

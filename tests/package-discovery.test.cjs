@@ -19,7 +19,7 @@ test('package discovery points at built node and credential files', () => {
 test('ships only Base discovery entries and no runtime dependencies', () => {
   assert.deepEqual(packageJson.dependencies ?? {}, {});
   assert.deepEqual(packageJson.peerDependencies ?? {}, {});
-  assert.equal(packageJson.name, 'n8n-nodes-base-com');
+  assert.equal(packageJson.name, '@emems/n8n-nodes-base-com');
   assert.deepEqual(packageJson.n8n.nodes, ['dist/nodes/Base/Base.node.js']);
   assert.deepEqual(packageJson.n8n.credentials, ['dist/credentials/BaseComApi.credentials.js']);
   const { Base, BaseComApi } = require('../index.js');

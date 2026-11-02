@@ -1,0 +1,20 @@
+{
+	"node": "n8n-nodes-base-com.base",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": [
+		"Sales"
+	],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://api.baselinker.com/"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://github.com/emmems/n8n-nodes-base-com#readme"
+			}
+		]
+	}
+}

@@ -1,47 +1,68 @@
-![Banner image](https://user-images.githubusercontent.com/10284570/173569848-c624317f-42b1-45a6-ab09-f0ea3c247648.png)
+# n8n-nodes-base-com
 
-# n8n-nodes-starter
+An [n8n](https://n8n.io/) community node for the [Base](https://base.com/) API (formerly BaseLinker).
 
-This repo contains example nodes to help you get started building your own custom integrations for [n8n](n8n.io). It includes the node linter and other dependencies.
+[Installation](#installation) · [Credentials](#credentials) · [Operations](#operations) · [Compatibility](#compatibility) · [Development](#development) · [Resources](#resources)
 
-To make your custom node available to the community, you must create it as an npm package, and [submit it to the npm registry](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry).
+## Installation
 
-## Prerequisites
+Follow the [community nodes installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) in the n8n docs. In n8n, go to **Settings → Community Nodes → Install** and enter:
 
-You need the following installed on your development machine:
+```
+n8n-nodes-base-com
+```
 
-* [git](https://git-scm.com/downloads)
-* Node.js and npm. Minimum version Node 16. You can find instructions on how to install both using nvm (Node Version Manager) for Linux, Mac, and WSL [here](https://github.com/nvm-sh/nvm). For Windows users, refer to Microsoft's guide to [Install NodeJS on Windows](https://docs.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-windows).
-* Install n8n with:
-	```
-	npm install n8n -g
-	```
-* Recommended: follow n8n's guide to [set up your development environment](https://docs.n8n.io/integrations/creating-nodes/build/node-development-environment/).
+## Credentials
 
+The node uses the **Base API** credential, which needs one API token.
 
-## Using this starter
+1. In Base, open **Account & other → My account → API**.
+2. Generate a token. Its permissions decide which operations will work.
+3. In n8n, create a **Base API** credential and paste in the token.
 
-These are the basic steps for working with the starter. For detailed guidance on creating and publishing nodes, refer to the [documentation](https://docs.n8n.io/integrations/creating-nodes/).
+n8n checks the token by calling `getInventories` when you save the credential.
 
-1. [Generate a new repository](https://github.com/n8n-io/n8n-nodes-starter/generate) from this template repository.
-2. Clone your new repo:
-    ```
-    git clone https://github.com/<your organization>/<your-repo-name>.git
-    ```
-3. Run `npm i` to install dependencies.
-4. Open the project in your editor.
-5. Browse the examples in `/nodes` and `/credentials`. Modify the examples, or replace them with your own nodes.
-6. Update the `package.json` to match your details.
-7. Run `npm run lint` to check for errors or `npm run lintfix` to automatically fix errors when possible.
-8. Test your node locally. Refer to [Run your node locally](https://docs.n8n.io/integrations/creating-nodes/test/run-node-locally/) for guidance.
-9. Replace this README with documentation for your node. Use the [README_TEMPLATE](README_TEMPLATE.md) to get started.
-10. Update the LICENSE file to use your details.
-11. [Publish](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry) your package to npm.
+## Operations
 
-## More information
+Each operation maps to the [Base API](https://api.baselinker.com/) method with the same name.
 
-Refer to our [documentation on creating nodes](https://docs.n8n.io/integrations/creating-nodes/) for detailed information on building your own nodes.
+**Product Catalog:** add/delete/get inventories, price groups, warehouses, categories and manufacturers; get extra fields, integrations and available text field keys; add, delete and get products; get and update stock and prices; get product logs; run product macro triggers.
+
+**External Storage:** get the storages list, categories, product data, product list, quantities and prices; update product quantities.
+
+**Order:** add and get orders (by ID, email or phone); get the journal list, order sources, extra fields, transaction details, status list and payment history; set order fields, status(es), payment and receipt; add, edit and delete order products; add and get invoices, series and invoice files; add invoice and receipt files; get receipts and new receipts; run order macro triggers.
+
+**Courier Shipment:** create packages (automatic and manual); get couriers, courier fields, services and accounts; get labels and protocols; get order packages and package status history; delete packages; request parcel pickups and get their fields.
+
+## Compatibility
+
+Works with n8n 1.x. Needs Node.js 18.10 or newer.
+
+## Development
+
+```sh
+npm ci
+npm run build
+npm run lint
+```
+
+To run it in a local n8n (installs into `~/.n8n/custom` and starts n8n):
+
+```sh
+npm run dev:n8n
+```
+
+To call the API without n8n:
+
+```sh
+BASE_API_TOKEN=your-token node debug/base-api.js
+```
+
+## Resources
+
+- [n8n community nodes documentation](https://docs.n8n.io/integrations/#community-nodes)
+- [Base API documentation](https://api.baselinker.com/)
 
 ## License
 
-[MIT](https://github.com/n8n-io/n8n-nodes-starter/blob/master/LICENSE.md)
+[MIT](LICENSE.md)

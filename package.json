@@ -1,19 +1,25 @@
 {
-  "name": "@StudlyApp/n8n-nodes-baselinker",
-  "version": "0.1.1",
-  "description": "n8n node to create contacts in Baselinker",
+  "name": "n8n-nodes-base-com",
+  "version": "0.2.0",
+  "description": "n8n community node for the Base (formerly BaseLinker) API: orders, product catalog, external storages and courier shipments",
   "keywords": [
-    "n8n-community-node-package"
+    "n8n-community-node-package",
+    "n8n",
+    "base",
+    "base.com",
+    "baselinker",
+    "ecommerce",
+    "orders",
+    "inventory"
   ],
   "license": "MIT",
-  "homepage": "https://n8n.io",
+  "homepage": "https://github.com/emmems/n8n-nodes-base-com#readme",
   "author": {
-    "name": "Test",
-    "email": "test@example.com"
+    "name": "Piotr Michalik"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/kamil713/n8n-nodes-friendgrid.git"
+    "url": "git+https://github.com/emmems/n8n-nodes-base-com.git"
   },
   "main": "index.js",
   "scripts": {
@@ -23,7 +29,7 @@
     "lint": "eslint nodes credentials package.json",
     "lintfix": "eslint nodes credentials package.json --fix",
     "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json",
-    "windows": "sh ./scripts/windows.sh"
+    "dev:n8n": "sh ./scripts/mac.sh"
   },
   "files": [
     "dist"
@@ -31,11 +37,10 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/FriendGridApi.credentials.js",
-      "dist/credentials/BaselinkerApi.credentials.js"
+      "dist/credentials/BaseComApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/FriendGrid/FriendGrid.node.js"
+      "dist/nodes/Base/Base.node.js"
     ]
   },
   "devDependencies": {
@@ -52,7 +57,10 @@
   "dependencies": {
     "zod": "^3.22.4"
   },
-  "publishConfig": {
-    "@StudlyApp:registry": "https://npm.pkg.github.com"
+  "bugs": {
+    "url": "https://github.com/emmems/n8n-nodes-base-com/issues"
+  },
+  "engines": {
+    "node": ">=18.10"
   }
 }

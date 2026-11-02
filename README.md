@@ -36,7 +36,7 @@ Each operation maps to the [Base API](https://api.baselinker.com/) method with t
 
 ## Compatibility
 
-The package targets the modern execution APIs in `n8n-workflow@3.0.1`, currently a release candidate (RC). The Base rename commit was loaded in n8n 2.45.7; the release-ready changes still need workflow validation in that application. An n8n application 3.x release was not available for validation, so application 3.x compatibility remains unverified. Use the Node.js version required by your n8n installation.
+The package targets the modern execution APIs in `n8n-workflow@3.0.1`, currently a release candidate (RC). It has been tested by installing the packed package into n8n 2.45.7 and running workflows. No n8n 3.x application has been released yet, so it has not been tested in one. Use the Node.js version required by your n8n installation.
 
 The package has no runtime dependencies. Requests use n8n’s authenticated HTTP helper and the `baseComApi` credential. Base API error responses fail execution, or produce an error item when **Continue On Fail** is enabled.
 

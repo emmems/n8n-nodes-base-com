@@ -1,39 +1,70 @@
-name: Publish to npm
+# Publishes @emems/n8n-nodes-base-com to npm on every version tag push.
+#
+# Authentication uses npm trusted publishing (OIDC): GitHub mints a short-lived
+# OIDC token for this workflow, npm exchanges it for a publish token bound to
+# this repository and workflow file. No npm token lives in GitHub, so there is
+# nothing to rotate and nothing to leak.
+#
+# n8n requires community nodes to be published from GitHub Actions with a
+# provenance attestation. The attestation is generated here from the OIDC
+# token, so it proves this workflow, this repository and this commit built
+# the package.
+#
+# The matching trusted publisher is configured on npmjs.com under
+# @emems/n8n-nodes-base-com → Settings → Trusted publishers:
+#   Organization/user: emmems
+#   Repository:        n8n-nodes-base-com
+#   Workflow filename: publish.yml
+#
+# Release: bump the version in package.json, commit, then tag and push:
+#   git tag vX.Y.Z && git push origin vX.Y.Z
 
-# Run manually (Actions → Publish to npm → Run workflow, or `gh workflow run publish.yml -f otp=123456`).
-# n8n requires verified community nodes to be published from GitHub Actions with npm provenance.
-# The path from start to `npm publish` is kept short so an npm 2FA one-time code is still valid when it arrives;
-# tests and lint run in the separate CI workflow.
+name: Publish
+
 on:
-  workflow_dispatch:
-    inputs:
-      otp:
-        description: npm one-time 2FA code (leave empty when the token or trusted publishing needs none)
-        required: false
-        type: string
+  push:
+    tags:
+      - 'v*'
 
 permissions:
+  # Required to mint the OIDC token npm exchanges for a publish token.
+  id-token: write
+  # Scoped down from the default (write) for least-privilege publishing.
   contents: read
-  id-token: write # needed for npm provenance
 
 jobs:
   publish:
+    name: Publish to npm
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
-          registry-url: https://registry.npmjs.org
-          cache: npm
+          # npm >= 11.5.1 is needed for OIDC trusted publishing; Node 24 ships it.
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
 
-      - run: npm ci
-      - run: npm run build
+      - name: Install dependencies
+        run: 'npm ci'
 
-      - name: Publish
-        run: npm publish --provenance --access public --ignore-scripts ${OTP:+--otp=$OTP}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          OTP: ${{ inputs.otp }}
+      - name: Run tests
+        run: 'npm test'
+
+      - name: Check whether this version is already on npm
+        id: published
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already on npm; skipping publish."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to npm
+        if: steps.published.outputs.exists != 'true'
+        # `prepublishOnly` builds the package and runs the n8n node lint.
+        run: 'npm publish --provenance --access public'

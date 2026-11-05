@@ -1,6 +1,6 @@
 {
   "name": "@emems/n8n-nodes-base-com",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "n8n community node for the Base (formerly BaseLinker) API: orders, product catalog, external storages and courier shipments",
   "keywords": [
     "n8n-community-node-package",
